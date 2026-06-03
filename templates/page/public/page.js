@@ -8,7 +8,7 @@ await boot();
 async function boot() {
   try {
     const profile = await fetchJson('./profile.json');
-    const feed = await fetchJson(profile.endpoints.feed);
+    const feed = await fetchJson('./feed.json');
     const verifiedPosts = [];
 
     profileName.textContent = profile.name;
