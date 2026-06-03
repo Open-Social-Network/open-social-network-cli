@@ -1,18 +1,23 @@
 :root {
-  color: #14242c;
-  background: #f4f7f9;
+  color: #edf6ff;
+  background: #070a12;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --surface: #ffffff;
-  --ink: #14242c;
-  --muted: #667883;
-  --border: #d8e1e7;
-  --accent: #0f766e;
-  --accent-soft: #d9f0ee;
-  --shadow: 0 18px 55px rgba(20, 36, 44, 0.1);
+  --surface: #151d2e;
+  --surface-soft: #101624;
+  --ink: #edf6ff;
+  --muted: #9dacbf;
+  --border: #29364f;
+  --accent: #4d7cff;
+  --accent-strong: #b9caff;
+  --accent-soft: rgba(77, 124, 255, 0.18);
+  --cyan: #2ce7f0;
+  --cyan-soft: rgba(44, 231, 240, 0.15);
+  --violet: #8f5bff;
+  --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
 }
 
 * {
@@ -24,9 +29,10 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background:
-    linear-gradient(135deg, rgba(15, 118, 110, 0.1), transparent 38%),
-    linear-gradient(315deg, rgba(249, 115, 77, 0.11), transparent 32%),
-    #f4f7f9;
+    radial-gradient(circle at 8% 0%, rgba(77, 124, 255, 0.28), transparent 34%),
+    radial-gradient(circle at 92% 10%, rgba(44, 231, 240, 0.18), transparent 30%),
+    radial-gradient(circle at 52% 0%, rgba(143, 91, 255, 0.16), transparent 38%),
+    linear-gradient(180deg, #060810 0%, #0b1020 58%, #070a12 100%);
 }
 
 a {
@@ -43,7 +49,7 @@ a {
 .feed-section {
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(16, 22, 36, 0.92);
   box-shadow: var(--shadow);
 }
 
@@ -59,6 +65,10 @@ a {
 .profile-logo {
   width: 96px;
   height: 96px;
+  border: 1px solid rgba(77, 124, 255, 0.38);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(77, 124, 255, 0.18), rgba(44, 231, 240, 0.12));
   object-fit: contain;
 }
 
@@ -73,7 +83,7 @@ a {
 }
 
 .network-label {
-  color: var(--accent);
+  color: var(--cyan);
   font-size: 0.82rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -108,8 +118,8 @@ a {
   min-height: 34px;
   padding: 0 12px;
   border-radius: 8px;
-  background: var(--accent-soft);
-  color: #0b4f49;
+  background: linear-gradient(135deg, var(--accent-soft), var(--cyan-soft));
+  color: var(--accent-strong);
   font-size: 0.84rem;
   font-weight: 750;
   text-decoration: none;
@@ -154,7 +164,7 @@ a {
 
 .post-card p {
   margin-top: 10px;
-  color: #24323a;
+  color: #dce7f7;
   font-size: 1.05rem;
   line-height: 1.58;
 }
@@ -171,7 +181,7 @@ a {
 }
 
 .post-card code {
-  color: #0b4f49;
+  color: var(--cyan);
   overflow-wrap: anywhere;
 }
 
