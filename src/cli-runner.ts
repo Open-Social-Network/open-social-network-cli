@@ -45,19 +45,19 @@ export async function runCli(args: string[], io: CliIO = {}): Promise<number> {
         return 1;
     }
   } catch (error) {
-    stderr(error instanceof Error ? error.message : 'OpenSocial CLI failed.');
+    stderr(error instanceof Error ? error.message : 'Open Social Network CLI failed.');
     return 1;
   }
 }
 
 async function runInit(args: string[], stdout: (line: string) => void): Promise<void> {
   const parsed = parseArgs(args);
-  const targetDir = parsed.positionals[0] ?? (await prompt('Project folder', 'my-opensocial-page'));
-  const name = parsed.options.name ?? (await prompt('Your display name', 'OpenSocial Founder'));
-  const handle = parsed.options.handle ?? (await prompt('Your OpenSocial handle', 'founder@example.com'));
+  const targetDir = parsed.positionals[0] ?? (await prompt('Project folder', 'my-open-social-network-page'));
+  const name = parsed.options.name ?? (await prompt('Your display name', 'Open Social Network Founder'));
+  const handle = parsed.options.handle ?? (await prompt('Your Open Social Network handle', 'founder@example.com'));
   const bio =
     parsed.options.bio ??
-    (await prompt('Short bio', 'Publishing a sovereign OpenSocial page on the open web.'));
+    (await prompt('Short bio', 'Publishing a sovereign Open Social Network page on the open web.'));
   const website = parsed.options.website ?? (await prompt('Website URL', ''));
   const baseUrl = parsed.options['base-url'] ?? (await prompt('Public base URL, if known', ''));
   const deployTarget = normalizeTarget(
@@ -65,7 +65,7 @@ async function runInit(args: string[], stdout: (line: string) => void): Promise<
   );
   const firstPost =
     parsed.options['first-post'] ??
-    (await prompt('First post', 'Hello from my sovereign OpenSocial page.'));
+    (await prompt('First post', 'Hello from my sovereign Open Social Network page.'));
   const summary = await createProject({
     targetDir,
     handle,
@@ -77,16 +77,16 @@ async function runInit(args: string[], stdout: (line: string) => void): Promise<
     firstPost,
   });
 
-  stdout(`OpenSocial page created at ${summary.projectDir}`);
+  stdout(`Open Social Network page created at ${summary.projectDir}`);
   stdout('Back up private/identity.private.jwk.json. If you lose it, you lose the ability to publish new posts for this identity.');
-  stdout('Next: run opensocial validate, opensocial preview, then opensocial deploy.');
+  stdout('Next: run open-social-network validate, open-social-network preview, then open-social-network deploy.');
 }
 
 async function runPost(args: string[], stdout: (line: string) => void): Promise<void> {
   const parsed = parseArgs(args);
   const content = parsed.positionals.join(' ').trim();
   if (!content) {
-    throw new Error('Write your post after the command, for example: opensocial post "Hello world"');
+    throw new Error('Write your post after the command, for example: open-social-network post "Hello world"');
   }
   const projectDir = parsed.options.project ?? process.cwd();
   const feed = await addPost(projectDir, content);
@@ -103,11 +103,11 @@ async function runValidate(
   const validation = await validateProject(projectDir);
 
   if (!validation.valid) {
-    stderr(`OpenSocial validation failed:\n${validation.failures.map((failure) => `- ${failure}`).join('\n')}`);
+    stderr(`Open Social Network validation failed:\n${validation.failures.map((failure) => `- ${failure}`).join('\n')}`);
     return 1;
   }
 
-  stdout(`OpenSocial page is valid. Verified ${validation.verifiedPosts} signed posts.`);
+  stdout(`Open Social Network page is valid. Verified ${validation.verifiedPosts} signed posts.`);
   return 0;
 }
 
@@ -117,7 +117,7 @@ async function runPreview(args: string[], stdout: (line: string) => void): Promi
   const port = Number(parsed.options.port ?? 4173);
   const preview = await createPreviewServer(projectDir, { port });
 
-  stdout(`OpenSocial preview running at ${preview.url}`);
+  stdout(`Open Social Network preview running at ${preview.url}`);
   stdout('Press Ctrl+C to stop.');
 }
 
@@ -128,8 +128,8 @@ async function runDeploy(args: string[], stdout: (line: string) => void): Promis
   const result = await deployProject(projectDir, { target });
   stdout(
     result.url
-      ? `OpenSocial page deployed to ${result.url}`
-      : `OpenSocial page deployed to ${result.target}.`,
+      ? `Open Social Network page deployed to ${result.url}`
+      : `Open Social Network page deployed to ${result.target}.`,
   );
 }
 
@@ -185,15 +185,15 @@ async function prompt(question: string, defaultValue: string): Promise<string> {
 }
 
 function helpText(): string {
-  return `OpenSocial CLI
+  return `Open Social Network CLI
 
 Usage:
-  opensocial init [folder]
-  opensocial post "Your post" --project ./my-page
-  opensocial validate --project ./my-page
-  opensocial preview --project ./my-page --port 4173
-  opensocial deploy --project ./my-page --target github
-  opensocial deploy --project ./my-page --target cloudflare
+  open-social-network init [folder]
+  open-social-network post "Your post" --project ./my-page
+  open-social-network validate --project ./my-page
+  open-social-network preview --project ./my-page --port 4173
+  open-social-network deploy --project ./my-page --target github
+  open-social-network deploy --project ./my-page --target cloudflare
 
-Run opensocial with no command to start the guided setup.`;
+Run open-social-network with no command to start the guided setup.`;
 }

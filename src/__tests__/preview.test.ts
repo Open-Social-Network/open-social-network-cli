@@ -35,7 +35,7 @@ describe('createPreviewServer', () => {
       const profile = await fetchJson(`${preview.url}/profile.json`);
       const feed = await fetchJson(`${preview.url}/feed.json`);
 
-      expect(html).toContain('OpenSocial Sovereign Page');
+      expect(html).toContain('Open Social Network Sovereign Page');
       expect(profile.handle).toBe('ada@example.com');
       expect(feed.posts).toHaveLength(1);
     } finally {
@@ -45,7 +45,7 @@ describe('createPreviewServer', () => {
 });
 
 async function makeTempRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), 'opensocial-cli-'));
+  const root = await mkdtemp(join(tmpdir(), 'open-social-network-cli-'));
   tempRoots.push(root);
   return root;
 }

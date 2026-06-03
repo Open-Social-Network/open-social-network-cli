@@ -1,6 +1,6 @@
 # Security Policy
 
-OpenSocial CLI is early alpha software.
+Open Social Network CLI is early alpha software.
 
 ## Private Key Safety
 

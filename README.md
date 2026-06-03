@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="./assets/open-social-logo.png" width="96" alt="OpenSocial logo" />
+  <img src="./assets/open-social-network-logo.png" width="96" alt="Open Social Network logo" />
 </p>
 
-# OpenSocial CLI
+# Open Social Network CLI
 
-OpenSocial CLI is the easiest way to create, update, validate, preview, and publish a sovereign OpenSocial page.
+Open Social Network CLI is the easiest way to create, update, validate, preview, and publish a sovereign Open Social Network page.
 
 It turns the protocol into a real user flow:
 
@@ -21,18 +21,18 @@ It turns the protocol into a real user flow:
 Run:
 
 ```bash
-npx opensocial
+npx open-social-network
 ```
 
-The CLI asks simple questions and creates a standalone OpenSocial page project.
+The CLI asks simple questions and creates a standalone Open Social Network page project.
 
 The generated project contains:
 
 ```text
 my-page/
-├── opensocial.config.json
+├── open-social-network.config.json
 ├── public/
-│   ├── .well-known/opensocial.json
+│   ├── .well-known/open-social-network.json
 │   ├── assets/
 │   ├── feed.json
 │   ├── index.html
@@ -51,45 +51,45 @@ The internet has protocols for websites, domain names, email, feeds, files, and 
 
 Social identity still mostly lives inside platforms.
 
-OpenSocial changes that by making a social profile a page on the internet. OpenSocial CLI makes that idea usable without asking people to understand JSON, cryptographic signatures, or static hosting internals.
+Open Social Network changes that by making a social profile a page on the internet. Open Social Network CLI makes that idea usable without asking people to understand JSON, cryptographic signatures, or static hosting internals.
 
 ## Quick Start
 
 Create a page:
 
 ```bash
-npx opensocial init my-page
+npx open-social-network init my-page
 ```
 
 Add a post:
 
 ```bash
 cd my-page
-npx opensocial post "Hello from my sovereign OpenSocial page."
+npx open-social-network post "Hello from my sovereign Open Social Network page."
 ```
 
 Validate signatures and protocol files:
 
 ```bash
-npx opensocial validate
+npx open-social-network validate
 ```
 
 Preview locally:
 
 ```bash
-npx opensocial preview
+npx open-social-network preview
 ```
 
 Deploy:
 
 ```bash
-npx opensocial deploy --target github
+npx open-social-network deploy --target github
 ```
 
 or:
 
 ```bash
-npx opensocial deploy --target cloudflare
+npx open-social-network deploy --target cloudflare
 ```
 
 ## Deployment Targets
@@ -107,7 +107,7 @@ gh auth login
 Then deploy:
 
 ```bash
-npx opensocial deploy --target github
+npx open-social-network deploy --target github
 ```
 
 The CLI publishes only the generated `public/` files to a `gh-pages` branch. It never publishes `private/`.
@@ -126,7 +126,7 @@ wrangler login
 Then deploy:
 
 ```bash
-npx opensocial deploy --target cloudflare
+npx open-social-network deploy --target cloudflare
 ```
 
 The CLI runs a direct upload of the generated `public/` directory.
@@ -150,22 +150,22 @@ The generated `.gitignore` includes `private/` automatically.
 ## Commands
 
 ```bash
-opensocial init [folder]
-opensocial post "Your post" --project ./my-page
-opensocial validate --project ./my-page
-opensocial preview --project ./my-page --port 4173
-opensocial deploy --project ./my-page --target github
-opensocial deploy --project ./my-page --target cloudflare
+open-social-network init [folder]
+open-social-network post "Your post" --project ./my-page
+open-social-network validate --project ./my-page
+open-social-network preview --project ./my-page --port 4173
+open-social-network deploy --project ./my-page --target github
+open-social-network deploy --project ./my-page --target cloudflare
 ```
 
-Running `opensocial` with no command starts the guided setup.
+Running `open-social-network` with no command starts the guided setup.
 
 ## Related Repositories
 
-- [`opensocial-core`](https://github.com/Open-Social-Organization/opensocial-core) - protocol primitives, schemas, and specification
-- [`opensocial-web`](https://github.com/Open-Social-Organization/opensocial-web) - the official web aggregator
-- [`opensocial-page`](https://github.com/Open-Social-Organization/opensocial-page) - sovereign page template
+- [`open-social-network-core`](https://github.com/Open-Social-Network/open-social-network-core) - protocol primitives, schemas, and specification
+- [`open-social-network-web`](https://github.com/Open-Social-Network/open-social-network-web) - the official web aggregator
+- [`open-social-network-page`](https://github.com/Open-Social-Network/open-social-network-page) - sovereign page template
 
 ## Status
 
-OpenSocial CLI is early alpha. The current priority is simple, safe publishing for real sovereign profiles.
+Open Social Network CLI is early alpha. The current priority is simple, safe publishing for real sovereign profiles.

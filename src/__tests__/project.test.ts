@@ -12,7 +12,7 @@ afterEach(async () => {
   tempRoots.length = 0;
 });
 
-describe('OpenSocial project lifecycle', () => {
+describe('Open Social Network project lifecycle', () => {
   it('creates the standalone page project with public files and a private key', async () => {
     const root = await makeTempRoot();
     const projectDir = join(root, 'my-page');
@@ -25,11 +25,11 @@ describe('OpenSocial project lifecycle', () => {
       website: 'https://example.com',
       baseUrl: '',
       deployTarget: 'github',
-      firstPost: 'Hello from OpenSocial.',
+      firstPost: 'Hello from Open Social Network.',
     });
 
     const profile = await readJson(join(projectDir, 'public/profile.json'));
-    const discovery = await readJson(join(projectDir, 'public/.well-known/opensocial.json'));
+    const discovery = await readJson(join(projectDir, 'public/.well-known/open-social-network.json'));
     const feed = await readJson(join(projectDir, 'public/feed.json'));
     const privateKey = await readJson(join(projectDir, 'private/identity.private.jwk.json'));
     const gitignore = await readFile(join(projectDir, '.gitignore'), 'utf8');
@@ -163,7 +163,7 @@ describe('OpenSocial project lifecycle', () => {
 });
 
 async function makeTempRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), 'opensocial-cli-'));
+  const root = await mkdtemp(join(tmpdir(), 'open-social-network-cli-'));
   tempRoots.push(root);
   return root;
 }

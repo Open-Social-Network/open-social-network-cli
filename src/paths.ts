@@ -12,7 +12,7 @@ export function templatePublicDir(): string {
 }
 
 export function configPath(projectDir: string): string {
-  return join(projectDir, 'opensocial.config.json');
+  return join(projectDir, 'open-social-network.config.json');
 }
 
 export function publicDir(projectDir: string): string {
@@ -28,7 +28,7 @@ export function profilePath(projectDir: string): string {
 }
 
 export function discoveryPath(projectDir: string): string {
-  return join(publicDir(projectDir), '.well-known/opensocial.json');
+  return join(publicDir(projectDir), '.well-known/open-social-network.json');
 }
 
 export function feedPath(projectDir: string): string {

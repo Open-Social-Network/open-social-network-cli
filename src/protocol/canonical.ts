@@ -1,4 +1,4 @@
-import type { OpenSocialPost, UnsignedOpenSocialPost } from '../types.js';
+import type { OpenSocialNetworkPost, UnsignedOpenSocialNetworkPost } from '../types.js';
 
 type CanonicalValue =
   | null
@@ -13,9 +13,9 @@ export function canonicalStringify(value: unknown): string {
 }
 
 export function postSigningPayload(
-  post: OpenSocialPost | UnsignedOpenSocialPost,
-): UnsignedOpenSocialPost {
-  const { signature: _signature, ...payload } = post as OpenSocialPost;
+  post: OpenSocialNetworkPost | UnsignedOpenSocialNetworkPost,
+): UnsignedOpenSocialNetworkPost {
+  const { signature: _signature, ...payload } = post as OpenSocialNetworkPost;
   return payload;
 }
 

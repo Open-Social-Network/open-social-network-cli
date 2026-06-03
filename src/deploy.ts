@@ -105,7 +105,7 @@ async function ensureGitHubRepo(
       `${owner}/${projectName}`,
       '--public',
       '--description',
-      'A sovereign OpenSocial page.',
+      'A sovereign Open Social Network page.',
     ],
     runner,
   );
@@ -117,18 +117,18 @@ async function publishGitHubPagesBranch(
   projectDir: string,
   runner: CommandRunner,
 ): Promise<void> {
-  const tempDir = await mkdtemp(join(tmpdir(), 'opensocial-gh-pages-'));
+  const tempDir = await mkdtemp(join(tmpdir(), 'open-social-network-gh-pages-'));
   try {
     await cp(publicDir(projectDir), tempDir, { recursive: true });
     await requireSuccessful('git', ['init', '-b', 'gh-pages'], runner, { cwd: tempDir });
-    await requireSuccessful('git', ['config', 'user.name', 'OpenSocial CLI'], runner, {
+    await requireSuccessful('git', ['config', 'user.name', 'Open Social Network CLI'], runner, {
       cwd: tempDir,
     });
-    await requireSuccessful('git', ['config', 'user.email', 'opensocial-cli@users.noreply.github.com'], runner, {
+    await requireSuccessful('git', ['config', 'user.email', 'open-social-network-cli@users.noreply.github.com'], runner, {
       cwd: tempDir,
     });
     await requireSuccessful('git', ['add', '-A'], runner, { cwd: tempDir });
-    await requireSuccessful('git', ['commit', '-m', 'Publish OpenSocial page'], runner, {
+    await requireSuccessful('git', ['commit', '-m', 'Publish Open Social Network page'], runner, {
       cwd: tempDir,
     });
     await requireSuccessful(

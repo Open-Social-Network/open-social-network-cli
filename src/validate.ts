@@ -1,7 +1,7 @@
 import { fileExists, readJson } from './fs-utils.js';
 import { discoveryPath, feedPath, privateKeyPath, profilePath } from './paths.js';
 import { verifyPost } from './protocol/signing.js';
-import type { OpenSocialFeed, OpenSocialIdentity } from './types.js';
+import type { OpenSocialNetworkFeed, OpenSocialNetworkIdentity } from './types.js';
 
 export interface ValidationResult {
   valid: boolean;
@@ -23,7 +23,7 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
     failures.push('public/profile.json is missing');
   }
   if (!(await fileExists(discoveryPath(projectDir)))) {
-    failures.push('public/.well-known/opensocial.json is missing');
+    failures.push('public/.well-known/open-social-network.json is missing');
   }
   if (!(await fileExists(feedPath(projectDir)))) {
     failures.push('public/feed.json is missing');
@@ -33,20 +33,20 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
     return { valid: false, verifiedPosts, failures };
   }
 
-  const profile = await readJson<OpenSocialIdentity>(profilePath(projectDir));
-  const discovery = await readJson<OpenSocialIdentity>(discoveryPath(projectDir));
-  const feed = await readJson<OpenSocialFeed>(feedPath(projectDir));
+  const profile = await readJson<OpenSocialNetworkIdentity>(profilePath(projectDir));
+  const discovery = await readJson<OpenSocialNetworkIdentity>(discoveryPath(projectDir));
+  const feed = await readJson<OpenSocialNetworkFeed>(feedPath(projectDir));
 
-  if (profile.protocol !== 'opensocial' || profile.version !== '0.1') {
-    failures.push('profile.json must declare OpenSocial protocol version 0.1');
+  if (profile.protocol !== 'open-social-network' || profile.version !== '0.1') {
+    failures.push('profile.json must declare Open Social Network protocol version 0.1');
   }
 
   if (JSON.stringify(profile) !== JSON.stringify(discovery)) {
-    failures.push('.well-known/opensocial.json must match profile.json');
+    failures.push('.well-known/open-social-network.json must match profile.json');
   }
 
-  if (feed.protocol !== 'opensocial' || feed.version !== '0.1') {
-    failures.push('feed.json must declare OpenSocial protocol version 0.1');
+  if (feed.protocol !== 'open-social-network' || feed.version !== '0.1') {
+    failures.push('feed.json must declare Open Social Network protocol version 0.1');
   }
 
   if (feed.author !== profile.handle) {

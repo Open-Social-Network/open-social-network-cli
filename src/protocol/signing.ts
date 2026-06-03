@@ -2,7 +2,7 @@ import { webcrypto } from 'node:crypto';
 import { bytesToBase64Url, base64UrlToBytes } from './base64url.js';
 import { canonicalStringify, postSigningPayload } from './canonical.js';
 import { importPrivateKeyJwk, importPublicKeyJwk } from './keys.js';
-import type { OpenSocialIdentity, OpenSocialPost, UnsignedOpenSocialPost } from '../types.js';
+import type { OpenSocialNetworkIdentity, OpenSocialNetworkPost, UnsignedOpenSocialNetworkPost } from '../types.js';
 
 const SIGNING_ALGORITHM: EcdsaParams = {
   name: 'ECDSA',
@@ -10,9 +10,9 @@ const SIGNING_ALGORITHM: EcdsaParams = {
 };
 
 export async function signPost(
-  post: UnsignedOpenSocialPost,
+  post: UnsignedOpenSocialNetworkPost,
   privateJwk: JsonWebKey,
-): Promise<OpenSocialPost> {
+): Promise<OpenSocialNetworkPost> {
   const privateKey = await importPrivateKeyJwk(privateJwk);
   const payload = new TextEncoder().encode(canonicalStringify(postSigningPayload(post)));
   const signature = await webcrypto.subtle.sign(SIGNING_ALGORITHM, privateKey, payload);
@@ -27,8 +27,8 @@ export async function signPost(
 }
 
 export async function verifyPost(
-  post: OpenSocialPost,
-  identity: OpenSocialIdentity,
+  post: OpenSocialNetworkPost,
+  identity: OpenSocialNetworkIdentity,
 ): Promise<boolean> {
   if (post.author !== identity.handle || post.signature?.alg !== 'ES256') {
     return false;

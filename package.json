@@ -1,14 +1,14 @@
 {
-  "name": "opensocial",
+  "name": "open-social-network",
   "version": "0.1.3",
-  "description": "Official CLI for creating, validating, previewing, and deploying sovereign OpenSocial pages.",
+  "description": "Official CLI for creating, validating, previewing, and deploying sovereign Open Social Network pages.",
   "type": "module",
   "license": "MIT",
   "engines": {
     "node": ">=20"
   },
   "bin": {
-    "opensocial": "dist/cli.js"
+    "open-social-network": "dist/cli.js"
   },
   "files": [
     "dist",
@@ -26,14 +26,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Open-Social-Organization/opensocial-cli.git"
+    "url": "git+https://github.com/Open-Social-Network/open-social-network-cli.git"
   },
   "bugs": {
-    "url": "https://github.com/Open-Social-Organization/opensocial-cli/issues"
+    "url": "https://github.com/Open-Social-Network/open-social-network-cli/issues"
   },
-  "homepage": "https://github.com/Open-Social-Organization/opensocial-cli#readme",
+  "homepage": "https://github.com/Open-Social-Network/open-social-network-cli#readme",
   "keywords": [
-    "opensocial",
+    "open-social-network",
     "decentralized-social",
     "sovereign-identity",
     "signed-feeds",

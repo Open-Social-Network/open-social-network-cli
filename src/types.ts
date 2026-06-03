@@ -1,7 +1,7 @@
 export type DeployTarget = 'github' | 'cloudflare';
 
-export interface OpenSocialConfig {
-  protocol: 'opensocial';
+export interface OpenSocialNetworkConfig {
+  protocol: 'open-social-network';
   version: '0.1';
   handle: string;
   name: string;
@@ -12,8 +12,8 @@ export interface OpenSocialConfig {
   projectName: string;
 }
 
-export interface OpenSocialIdentity {
-  protocol: 'opensocial';
+export interface OpenSocialNetworkIdentity {
+  protocol: 'open-social-network';
   version: '0.1';
   handle: string;
   name: string;
@@ -29,23 +29,23 @@ export interface OpenSocialIdentity {
   };
 }
 
-export interface UnsignedOpenSocialPost {
+export interface UnsignedOpenSocialNetworkPost {
   id: string;
   author: string;
   createdAt: string;
   content: string;
 }
 
-export interface OpenSocialPost extends UnsignedOpenSocialPost {
+export interface OpenSocialNetworkPost extends UnsignedOpenSocialNetworkPost {
   signature: {
     alg: 'ES256';
     value: string;
   };
 }
 
-export interface OpenSocialFeed {
-  protocol: 'opensocial';
+export interface OpenSocialNetworkFeed {
+  protocol: 'open-social-network';
   version: '0.1';
   author: string;
-  posts: OpenSocialPost[];
+  posts: OpenSocialNetworkPost[];
 }

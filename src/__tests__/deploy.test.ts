@@ -99,7 +99,7 @@ const missingCommandRunner: CommandRunner = async (command) => ({
 });
 
 async function makeTempRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), 'opensocial-cli-'));
+  const root = await mkdtemp(join(tmpdir(), 'open-social-network-cli-'));
   tempRoots.push(root);
   return root;
 }

@@ -19,10 +19,10 @@ import {
 import { signPost } from './protocol/signing.js';
 import type {
   DeployTarget,
-  OpenSocialConfig,
-  OpenSocialFeed,
-  OpenSocialIdentity,
-  UnsignedOpenSocialPost,
+  OpenSocialNetworkConfig,
+  OpenSocialNetworkFeed,
+  OpenSocialNetworkIdentity,
+  UnsignedOpenSocialNetworkPost,
 } from './types.js';
 
 export interface CreateProjectOptions {
@@ -53,8 +53,8 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
   const keyResult = await loadOrCreatePrivateKey(projectDir);
   const config = buildConfig(options, projectDir);
   const { profileUrl, feedUrl } = endpointUrls(config.baseUrl);
-  const profile: OpenSocialIdentity = {
-    protocol: 'opensocial',
+  const profile: OpenSocialNetworkIdentity = {
+    protocol: 'open-social-network',
     version: '0.1',
     handle: config.handle,
     name: config.name,
@@ -78,8 +78,8 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
     );
   }
 
-  const feed: OpenSocialFeed = {
-    protocol: 'opensocial',
+  const feed: OpenSocialNetworkFeed = {
+    protocol: 'open-social-network',
     version: '0.1',
     author: profile.handle,
     posts,
@@ -99,11 +99,11 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
   };
 }
 
-export async function addPost(projectDirInput: string, content: string): Promise<OpenSocialFeed> {
+export async function addPost(projectDirInput: string, content: string): Promise<OpenSocialNetworkFeed> {
   const projectDir = resolve(projectDirInput);
   const privateJwk = await requirePrivateKey(projectDir);
-  const profile = await readJson<OpenSocialIdentity>(profilePath(projectDir));
-  const feed = await readJson<OpenSocialFeed>(feedPath(projectDir));
+  const profile = await readJson<OpenSocialNetworkIdentity>(profilePath(projectDir));
+  const feed = await readJson<OpenSocialNetworkFeed>(feedPath(projectDir));
   const postNumber = feed.posts.length + 1;
   const id = `post_${String(postNumber).padStart(3, '0')}`;
 
@@ -140,17 +140,17 @@ async function loadOrCreatePrivateKey(
   return { privateJwk: privateWithPublic, created: true };
 }
 
-async function loadExistingFeed(projectDir: string): Promise<OpenSocialFeed | null> {
+async function loadExistingFeed(projectDir: string): Promise<OpenSocialNetworkFeed | null> {
   const path = feedPath(projectDir);
   if (!(await fileExists(path))) {
     return null;
   }
-  return readJson<OpenSocialFeed>(path);
+  return readJson<OpenSocialNetworkFeed>(path);
 }
 
-function buildConfig(options: CreateProjectOptions, projectDir: string): OpenSocialConfig {
+function buildConfig(options: CreateProjectOptions, projectDir: string): OpenSocialNetworkConfig {
   return {
-    protocol: 'opensocial',
+    protocol: 'open-social-network',
     version: '0.1',
     handle: options.handle,
     name: options.name,
@@ -174,7 +174,7 @@ function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.trim().replace(/\/$/u, '');
 }
 
-function createUnsignedPost(id: string, author: string, content: string): UnsignedOpenSocialPost {
+function createUnsignedPost(id: string, author: string, content: string): UnsignedOpenSocialNetworkPost {
   return {
     id,
     author,
@@ -185,14 +185,14 @@ function createUnsignedPost(id: string, author: string, content: string): Unsign
 
 export async function readProjectName(projectDir: string): Promise<string> {
   if (await fileExists(configPath(projectDir))) {
-    const config = await readJson<OpenSocialConfig>(configPath(projectDir));
+    const config = await readJson<OpenSocialNetworkConfig>(configPath(projectDir));
     return config.projectName;
   }
   return basename(resolve(projectDir));
 }
 
-export async function readProjectConfig(projectDir: string): Promise<OpenSocialConfig> {
-  return readJson<OpenSocialConfig>(configPath(projectDir));
+export async function readProjectConfig(projectDir: string): Promise<OpenSocialNetworkConfig> {
+  return readJson<OpenSocialNetworkConfig>(configPath(projectDir));
 }
 
 export async function readTextFile(path: string): Promise<string> {
