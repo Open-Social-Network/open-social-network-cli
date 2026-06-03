@@ -35,7 +35,7 @@ describe('createPreviewServer', () => {
       const profile = await fetchJson(`${preview.url}/profile.json`);
       const feed = await fetchJson(`${preview.url}/feed.json`);
 
-      expect(html).toContain('Open Social Network Sovereign Page');
+      expect(html).toContain('Open Social Network Page');
       expect(profile.handle).toBe('ada@example.com');
       expect(feed.posts).toHaveLength(1);
     } finally {

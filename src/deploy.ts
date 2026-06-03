@@ -4,6 +4,7 @@ import { join, resolve } from 'node:path';
 import { cp } from 'node:fs/promises';
 import { publicDir } from './paths.js';
 import { readProjectConfig, readProjectName } from './project.js';
+import type { DeployTarget } from './types.js';
 import { validateProject } from './validate.js';
 import {
   requireCommand,
@@ -15,11 +16,13 @@ import {
 export interface DeployOptions {
   runner?: CommandRunner;
   projectName?: string;
+  outputDir?: string;
 }
 
 export interface DeployResult {
-  target: 'github' | 'cloudflare';
+  target: 'github' | 'cloudflare' | 'folder';
   url?: string;
+  outputDir?: string;
 }
 
 const githubGuidance =
@@ -70,15 +73,35 @@ export async function deployCloudflare(
   return { target: 'cloudflare' };
 }
 
+export async function deployFolder(
+  projectDirInput: string,
+  options: DeployOptions = {},
+): Promise<DeployResult> {
+  const projectDir = resolve(projectDirInput);
+  await assertValidForDeploy(projectDir);
+  const outputDir = resolve(options.outputDir ?? join(projectDir, 'open-social-network-public-site'));
+
+  await rm(outputDir, { recursive: true, force: true });
+  await cp(publicDir(projectDir), outputDir, { recursive: true });
+
+  return { target: 'folder', outputDir };
+}
+
 export async function deployProject(
   projectDir: string,
-  options: DeployOptions & { target?: 'github' | 'cloudflare' } = {},
+  options: DeployOptions & { target?: DeployTarget } = {},
 ): Promise<DeployResult> {
   const config = await readProjectConfig(projectDir);
   const target = options.target ?? config.deployTarget;
-  return target === 'github'
-    ? deployGitHub(projectDir, options)
-    : deployCloudflare(projectDir, options);
+  if (target === 'github') {
+    return deployGitHub(projectDir, options);
+  }
+
+  if (target === 'cloudflare') {
+    return deployCloudflare(projectDir, options);
+  }
+
+  return deployFolder(projectDir, options);
 }
 
 async function assertValidForDeploy(projectDir: string): Promise<void> {
@@ -105,7 +128,7 @@ async function ensureGitHubRepo(
       `${owner}/${projectName}`,
       '--public',
       '--description',
-      'A sovereign Open Social Network page.',
+      'An Open Social Network page.',
     ],
     runner,
   );

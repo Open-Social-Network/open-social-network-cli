@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Open Social Network Sovereign Page</title>
+    <title>Open Social Network Page</title>
     <meta
       name="description"
-      content="A sovereign Open Social Network page template with a signed profile and feed."
+      content="An Open Social Network page template for writing posts and publishing anywhere."
     />
     <link rel="icon" type="image/png" href="./assets/open-social-network-logo.png" />
     <link rel="stylesheet" href="./styles.css" />
@@ -18,26 +18,27 @@
       <section class="profile-hero">
         <img src="./assets/open-social-network-logo.png" alt="" class="profile-logo" />
         <div>
-          <p class="network-label">Open Social Network Sovereign Page</p>
+          <p class="network-label">Open Social Network Page</p>
           <h1 data-profile-name>Loading profile</h1>
           <p data-profile-bio></p>
-          <div class="profile-links">
-            <a href="./profile.json">profile.json</a>
-            <a href="./feed.json">feed.json</a>
-            <a href="./.well-known/open-social-network.json">discovery</a>
-          </div>
         </div>
       </section>
 
       <section class="feed-section">
         <div class="section-header">
           <div>
-            <h2>Signed Feed</h2>
-            <p>Posts published from this page and signed by this identity.</p>
+            <h2>Posts</h2>
+            <p>Published from this page and verified by Open Social Network.</p>
           </div>
-          <span data-verification-status>Verifying</span>
+          <span data-verification-status>Checking</span>
         </div>
         <div class="post-list" data-posts></div>
+        <details class="technical-details">
+          <summary>Technical details</summary>
+          <a href="./profile.json">Profile file</a>
+          <a href="./feed.json">Feed file</a>
+          <a href="./.well-known/open-social-network.json">Discovery file</a>
+        </details>
       </section>
     </main>
 

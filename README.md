@@ -4,17 +4,15 @@
 
 # Open Social Network CLI
 
-Open Social Network CLI is the easiest way to create, update, validate, preview, and publish a sovereign Open Social Network page.
+Open Social Network CLI is the terminal path for creating, updating, checking, previewing, and publishing a sovereign Open Social Network page.
 
 It turns the protocol into a real user flow:
 
-1. create an identity
-2. generate a private signing key
-3. publish `profile.json`
-4. publish `feed.json`
-5. sign every post
-6. preview the page locally
-7. deploy to a free static host
+1. create your page
+2. write posts
+3. check that everything verifies
+4. preview locally
+5. publish anywhere static files can be hosted
 
 ## In One Minute
 
@@ -55,10 +53,10 @@ Open Social Network changes that by making a social profile a page on the intern
 
 ## Quick Start
 
-Create a page:
+Create your page:
 
 ```bash
-npx open-social-network init my-page
+npx open-social-network create my-page
 ```
 
 Add a post:
@@ -68,10 +66,10 @@ cd my-page
 npx open-social-network post "Hello from my sovereign Open Social Network page."
 ```
 
-Validate signatures and protocol files:
+Check that the page is valid:
 
 ```bash
-npx open-social-network validate
+npx open-social-network check
 ```
 
 Preview locally:
@@ -80,17 +78,25 @@ Preview locally:
 npx open-social-network preview
 ```
 
-Deploy:
+Prepare files for any static host:
 
 ```bash
-npx open-social-network deploy --target github
+npx open-social-network publish --target folder --output ./public-site
+```
+
+Or use a built-in shortcut:
+
+```bash
+npx open-social-network publish --target github
 ```
 
 or:
 
 ```bash
-npx open-social-network deploy --target cloudflare
+npx open-social-network publish --target cloudflare
 ```
+
+GitHub Pages and Cloudflare Pages are examples. Open Social Network pages can be hosted anywhere that serves static files.
 
 ## Deployment Targets
 
@@ -104,10 +110,10 @@ Install and log in:
 gh auth login
 ```
 
-Then deploy:
+Then publish:
 
 ```bash
-npx open-social-network deploy --target github
+npx open-social-network publish --target github
 ```
 
 The CLI publishes only the generated `public/` files to a `gh-pages` branch. It never publishes `private/`.
@@ -123,10 +129,10 @@ npm install -g wrangler
 wrangler login
 ```
 
-Then deploy:
+Then publish:
 
 ```bash
-npx open-social-network deploy --target cloudflare
+npx open-social-network publish --target cloudflare
 ```
 
 The CLI runs a direct upload of the generated `public/` directory.
@@ -151,14 +157,19 @@ The generated `.gitignore` includes `private/` automatically.
 
 ```bash
 open-social-network init [folder]
+open-social-network create [folder]
 open-social-network post "Your post" --project ./my-page
 open-social-network validate --project ./my-page
+open-social-network check --project ./my-page
 open-social-network preview --project ./my-page --port 4173
 open-social-network deploy --project ./my-page --target github
 open-social-network deploy --project ./my-page --target cloudflare
+open-social-network publish --project ./my-page --target folder --output ./public-site
+open-social-network publish --project ./my-page --target github
+open-social-network publish --project ./my-page --target cloudflare
 ```
 
-Running `open-social-network` with no command starts the guided setup.
+Running `open-social-network` with no command starts the guided setup. The original command names remain supported; the simpler names are recommended for new users.
 
 ## Related Repositories
 

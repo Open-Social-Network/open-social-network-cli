@@ -1,8 +1,8 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { afterEach, describe, expect, it } from 'vitest';
-import { deployCloudflare, deployGitHub } from '../deploy.js';
+import { deployCloudflare, deployFolder, deployGitHub } from '../deploy.js';
 import { createProject } from '../project.js';
 import type { CommandRunner } from '../shell.js';
 
@@ -89,6 +89,29 @@ describe('deploy adapters', () => {
     expect(commands).toContain('wrangler whoami');
     expect(commands.some((command) => command.includes('pages deploy public'))).toBe(true);
     expect(commands.some((command) => command.includes('private'))).toBe(false);
+  });
+
+  it('exports only public files for any static host', async () => {
+    const root = await makeTempRoot();
+    const projectDir = join(root, 'my-page');
+    const outputDir = join(root, 'public-export');
+
+    await createProject({
+      targetDir: projectDir,
+      handle: 'ada@example.com',
+      name: 'Ada Lovelace',
+      bio: '',
+      website: '',
+      baseUrl: '',
+      deployTarget: 'folder',
+      firstPost: 'Deploy me anywhere.',
+    });
+
+    const result = await deployFolder(projectDir, { outputDir });
+
+    expect(result.target).toBe('folder');
+    expect(JSON.parse(await readFile(join(outputDir, 'feed.json'), 'utf8')).posts).toHaveLength(1);
+    await expect(readFile(join(outputDir, 'private/identity.private.jwk.json'), 'utf8')).rejects.toThrow();
   });
 });
 

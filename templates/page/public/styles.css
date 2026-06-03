@@ -29,9 +29,7 @@ body {
   min-width: 320px;
   min-height: 100vh;
   background:
-    radial-gradient(circle at 8% 0%, rgba(77, 124, 255, 0.28), transparent 34%),
-    radial-gradient(circle at 92% 10%, rgba(44, 231, 240, 0.18), transparent 30%),
-    radial-gradient(circle at 52% 0%, rgba(143, 91, 255, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(77, 124, 255, 0.1), transparent 320px),
     linear-gradient(180deg, #060810 0%, #0b1020 58%, #070a12 100%);
 }
 
@@ -104,14 +102,6 @@ a {
   line-height: 1.55;
 }
 
-.profile-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 20px;
-}
-
-.profile-links a,
 [data-verification-status] {
   display: inline-flex;
   align-items: center;
@@ -183,6 +173,30 @@ a {
 .post-card code {
   color: var(--cyan);
   overflow-wrap: anywhere;
+}
+
+.technical-details {
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.technical-details summary {
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.technical-details a {
+  display: inline-flex;
+  margin: 10px 12px 0 0;
+  color: var(--accent-strong);
+}
+
+.post-details {
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
 .empty-state {

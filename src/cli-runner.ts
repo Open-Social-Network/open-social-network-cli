@@ -15,7 +15,8 @@ export async function runCli(args: string[], io: CliIO = {}): Promise<number> {
   const stdout = io.stdout ?? ((line: string) => console.log(line));
   const stderr = io.stderr ?? ((line: string) => console.error(line));
   const [commandOrPath, ...rest] = args;
-  const command = isCommand(commandOrPath) ? commandOrPath : 'init';
+  const rawCommand = isCommand(commandOrPath) ? commandOrPath : 'init';
+  const command = normalizeCommand(rawCommand);
   const commandArgs = command === 'init' && commandOrPath && !isCommand(commandOrPath) ? args : rest;
 
   try {
@@ -53,19 +54,19 @@ export async function runCli(args: string[], io: CliIO = {}): Promise<number> {
 async function runInit(args: string[], stdout: (line: string) => void): Promise<void> {
   const parsed = parseArgs(args);
   const targetDir = parsed.positionals[0] ?? (await prompt('Project folder', 'my-open-social-network-page'));
-  const name = parsed.options.name ?? (await prompt('Your display name', 'Open Social Network Founder'));
-  const handle = parsed.options.handle ?? (await prompt('Your Open Social Network handle', 'founder@example.com'));
+  const name = parsed.options.name ?? (await prompt('What should your page be called?', 'Open Social Network Founder'));
+  const handle = parsed.options.handle ?? (await prompt('Choose a handle', 'founder@example.com'));
   const bio =
     parsed.options.bio ??
-    (await prompt('Short bio', 'Publishing a sovereign Open Social Network page on the open web.'));
+    (await prompt('Short bio', 'Publishing my Open Social Network page on the open web.'));
   const website = parsed.options.website ?? (await prompt('Website URL', ''));
   const baseUrl = parsed.options['base-url'] ?? (await prompt('Public base URL, if known', ''));
   const deployTarget = normalizeTarget(
-    parsed.options.target ?? (await prompt('Deploy target: github or cloudflare', 'github')),
+    parsed.options.target ?? (await prompt('Where do you want to publish? github, cloudflare, or folder', 'folder')),
   );
   const firstPost =
     parsed.options['first-post'] ??
-    (await prompt('First post', 'Hello from my sovereign Open Social Network page.'));
+    (await prompt('Write your first post', 'Hello from my Open Social Network page.'));
   const summary = await createProject({
     targetDir,
     handle,
@@ -79,7 +80,8 @@ async function runInit(args: string[], stdout: (line: string) => void): Promise<
 
   stdout(`Open Social Network page created at ${summary.projectDir}`);
   stdout('Back up private/identity.private.jwk.json. If you lose it, you lose the ability to publish new posts for this identity.');
-  stdout('Next: run open-social-network validate, open-social-network preview, then open-social-network deploy.');
+  stdout('Next: run open-social-network check, open-social-network preview, then open-social-network publish.');
+  stdout('You can host the public folder anywhere that supports static websites.');
 }
 
 async function runPost(args: string[], stdout: (line: string) => void): Promise<void> {
@@ -125,12 +127,19 @@ async function runDeploy(args: string[], stdout: (line: string) => void): Promis
   const parsed = parseArgs(args);
   const projectDir = parsed.options.project ?? process.cwd();
   const target = parsed.options.target ? normalizeTarget(parsed.options.target) : undefined;
-  const result = await deployProject(projectDir, { target });
-  stdout(
-    result.url
-      ? `Open Social Network page deployed to ${result.url}`
-      : `Open Social Network page deployed to ${result.target}.`,
-  );
+  const result = await deployProject(projectDir, { target, outputDir: parsed.options.output });
+  if (result.url) {
+    stdout(`Open Social Network page deployed to ${result.url}`);
+    return;
+  }
+
+  if (result.outputDir) {
+    stdout(`Public site exported to ${result.outputDir}`);
+    stdout('You can host the public folder anywhere that supports static websites.');
+    return;
+  }
+
+  stdout(`Open Social Network page deployed to ${result.target}.`);
 }
 
 function parseArgs(args: string[]): { positionals: string[]; options: Record<string, string> } {
@@ -159,15 +168,43 @@ function parseArgs(args: string[]): { positionals: string[]; options: Record<str
 function isCommand(value: string | undefined): value is string {
   return Boolean(
     value &&
-      ['init', 'post', 'validate', 'preview', 'deploy', 'help', '--help', '-h'].includes(value),
+      [
+        'init',
+        'create',
+        'post',
+        'validate',
+        'check',
+        'preview',
+        'deploy',
+        'publish',
+        'help',
+        '--help',
+        '-h',
+      ].includes(value),
   );
 }
 
 function normalizeTarget(value: string): DeployTarget {
-  if (value === 'github' || value === 'cloudflare') {
+  if (value === 'github' || value === 'cloudflare' || value === 'folder') {
     return value;
   }
-  throw new Error('Deploy target must be github or cloudflare.');
+  throw new Error('Publish target must be github, cloudflare, or folder.');
+}
+
+function normalizeCommand(command: string): string {
+  if (command === 'create') {
+    return 'init';
+  }
+
+  if (command === 'check') {
+    return 'validate';
+  }
+
+  if (command === 'publish') {
+    return 'deploy';
+  }
+
+  return command;
 }
 
 async function prompt(question: string, defaultValue: string): Promise<string> {
@@ -188,12 +225,14 @@ function helpText(): string {
   return `Open Social Network CLI
 
 Usage:
-  open-social-network init [folder]
+  open-social-network create [folder]
   open-social-network post "Your post" --project ./my-page
-  open-social-network validate --project ./my-page
+  open-social-network check --project ./my-page
   open-social-network preview --project ./my-page --port 4173
-  open-social-network deploy --project ./my-page --target github
-  open-social-network deploy --project ./my-page --target cloudflare
+  open-social-network publish --project ./my-page --target folder --output ./public-site
+  open-social-network publish --project ./my-page --target github
+  open-social-network publish --project ./my-page --target cloudflare
 
-Run open-social-network with no command to start the guided setup.`;
+Run open-social-network with no command to start the guided setup.
+You can host the public folder anywhere that supports static websites.`;
 }

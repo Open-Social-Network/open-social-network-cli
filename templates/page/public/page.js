@@ -21,7 +21,8 @@ async function boot() {
     }
 
     verifiedPosts.sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
-    verificationStatus.textContent = `${verifiedPosts.length} verified`;
+    verificationStatus.textContent =
+      verifiedPosts.length === 1 ? '1 verified post' : `${verifiedPosts.length} verified posts`;
     postsRoot.innerHTML = renderPosts(verifiedPosts);
   } catch (error) {
     verificationStatus.textContent = 'Unavailable';
@@ -126,12 +127,12 @@ function renderPosts(posts) {
     .map(
       (post) => `
         <article class="post-card">
-          <h3>${escapeHtml(post.author)} · ${escapeHtml(formatDate(post.createdAt))}</h3>
+          <h3>${escapeHtml(formatDate(post.createdAt))}</h3>
           <p>${escapeHtml(post.content)}</p>
-          <footer>
-            <span>ES256</span>
+          <details class="technical-details post-details">
+            <summary>Signature</summary>
             <code>${escapeHtml(post.signature.value.slice(0, 22))}...</code>
-          </footer>
+          </details>
         </article>
       `,
     )

@@ -1,4 +1,4 @@
-export type DeployTarget = 'github' | 'cloudflare';
+export type DeployTarget = 'github' | 'cloudflare' | 'folder';
 
 export interface OpenSocialNetworkConfig {
   protocol: 'open-social-network';

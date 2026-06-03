@@ -42,6 +42,51 @@ describe('runCli', () => {
     expect(output.join('\n')).toContain('Back up private/identity.private.jwk.json');
   });
 
+  it('supports human-friendly aliases for create, check, and publish', async () => {
+    const root = await makeTempRoot();
+    const projectDir = join(root, 'my-page');
+    const exportDir = join(root, 'site-export');
+    const output: string[] = [];
+
+    expect(
+      await runCli(
+        [
+          'create',
+          projectDir,
+          '--name',
+          'Ada Lovelace',
+          '--handle',
+          'ada@example.com',
+          '--first-post',
+          'Hello from the CLI.',
+          '--target',
+          'folder',
+        ],
+        { stdout: (line) => output.push(line), stderr: (line) => output.push(line) },
+      ),
+    ).toBe(0);
+    expect(await runCli(['post', 'A second post.', '--project', projectDir], {})).toBe(0);
+    expect(await runCli(['check', '--project', projectDir], {})).toBe(0);
+    expect(
+      await runCli(['publish', '--project', projectDir, '--target', 'folder', '--output', exportDir], {
+        stdout: (line) => output.push(line),
+        stderr: (line) => output.push(line),
+      }),
+    ).toBe(0);
+
+    expect(JSON.parse(await readFile(join(exportDir, 'feed.json'), 'utf8')).posts).toHaveLength(2);
+    await expect(readFile(join(exportDir, 'private/identity.private.jwk.json'), 'utf8')).rejects.toThrow();
+    expect(output.join('\n')).toContain('host the public folder anywhere');
+  });
+
+  it('explains that any static host can publish a page', async () => {
+    const output: string[] = [];
+
+    expect(await runCli(['help'], { stdout: (line) => output.push(line) })).toBe(0);
+
+    expect(output.join('\n')).toContain('host the public folder anywhere');
+  });
+
   it('returns a nonzero exit code for validation failures', async () => {
     const root = await makeTempRoot();
     const projectDir = join(root, 'my-page');
