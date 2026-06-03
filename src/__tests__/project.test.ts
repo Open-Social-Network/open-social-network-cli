@@ -35,6 +35,7 @@ describe('OpenSocial project lifecycle', () => {
     const gitignore = await readFile(join(projectDir, '.gitignore'), 'utf8');
     const nojekyll = await readFile(join(projectDir, 'public/.nojekyll'), 'utf8');
     const pageScript = await readFile(join(projectDir, 'public/page.js'), 'utf8');
+    const indexHtml = await readFile(join(projectDir, 'public/index.html'), 'utf8');
 
     expect(profile).toEqual(discovery);
     expect(profile.handle).toBe('ada@example.com');
@@ -46,6 +47,7 @@ describe('OpenSocial project lifecycle', () => {
     expect(gitignore).toContain('private/');
     expect(nojekyll.trim()).toBe('');
     expect(pageScript).toContain("fetchJson('./feed.json')");
+    expect(indexHtml).toContain('rel="icon"');
   });
 
   it('does not rotate the private key when init runs again', async () => {
