@@ -111,6 +111,9 @@ describe('deploy adapters', () => {
 
     expect(result.target).toBe('folder');
     expect(JSON.parse(await readFile(join(outputDir, 'feed.json'), 'utf8')).posts).toHaveLength(1);
+    expect(
+      JSON.parse(await readFile(join(outputDir, 'opensocial/actions/index.json'), 'utf8')).actions,
+    ).toEqual([]);
     await expect(readFile(join(outputDir, 'private/identity.private.jwk.json'), 'utf8')).rejects.toThrow();
   });
 });

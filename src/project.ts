@@ -2,6 +2,7 @@ import { chmod, mkdir, readFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { copyDirectory, ensureTextContains, fileExists, readJson, writeJson } from './fs-utils.js';
 import {
+  actionLogPath,
   configPath,
   discoveryPath,
   feedPath,
@@ -19,6 +20,7 @@ import {
 import { signPost } from './protocol/signing.js';
 import type {
   DeployTarget,
+  OpenSocialNetworkActionLog,
   OpenSocialNetworkConfig,
   OpenSocialNetworkFeed,
   OpenSocialNetworkIdentity,
@@ -70,6 +72,7 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
     },
   };
   const existingFeed = await loadExistingFeed(projectDir);
+  const existingActionLog = await loadExistingActionLog(projectDir);
   const posts = existingFeed?.posts ?? [];
 
   if (!existingFeed && options.firstPost.trim()) {
@@ -84,11 +87,18 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
     author: profile.handle,
     posts,
   };
+  const actionLog: OpenSocialNetworkActionLog = existingActionLog ?? {
+    protocol: 'open-social-network',
+    version: '0.1',
+    actor: profile.handle,
+    actions: [],
+  };
 
   await writeJson(configPath(projectDir), config);
   await writeJson(profilePath(projectDir), profile);
   await writeJson(discoveryPath(projectDir), profile);
   await writeJson(feedPath(projectDir), feed);
+  await writeJson(actionLogPath(projectDir), actionLog);
 
   return {
     projectDir,
@@ -146,6 +156,14 @@ async function loadExistingFeed(projectDir: string): Promise<OpenSocialNetworkFe
     return null;
   }
   return readJson<OpenSocialNetworkFeed>(path);
+}
+
+async function loadExistingActionLog(projectDir: string): Promise<OpenSocialNetworkActionLog | null> {
+  const path = actionLogPath(projectDir);
+  if (!(await fileExists(path))) {
+    return null;
+  }
+  return readJson<OpenSocialNetworkActionLog>(path);
 }
 
 function buildConfig(options: CreateProjectOptions, projectDir: string): OpenSocialNetworkConfig {

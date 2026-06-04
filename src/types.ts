@@ -49,3 +49,45 @@ export interface OpenSocialNetworkFeed {
   author: string;
   posts: OpenSocialNetworkPost[];
 }
+
+export type OpenSocialNetworkReaction = 'like' | 'dislike' | 'none';
+
+export interface OpenSocialNetworkActionTarget {
+  type: 'post';
+  id: string;
+  author: string;
+  url?: string;
+}
+
+interface OpenSocialNetworkActionBase {
+  id: string;
+  kind: 'reaction' | 'comment';
+  actor: string;
+  createdAt: string;
+  target: OpenSocialNetworkActionTarget;
+  signature: {
+    alg: 'ES256';
+    value: string;
+  };
+}
+
+export interface OpenSocialNetworkReactionAction extends OpenSocialNetworkActionBase {
+  kind: 'reaction';
+  reaction: OpenSocialNetworkReaction;
+}
+
+export interface OpenSocialNetworkCommentAction extends OpenSocialNetworkActionBase {
+  kind: 'comment';
+  content: string;
+}
+
+export type OpenSocialNetworkAction =
+  | OpenSocialNetworkReactionAction
+  | OpenSocialNetworkCommentAction;
+
+export interface OpenSocialNetworkActionLog {
+  protocol: 'open-social-network';
+  version: '0.1';
+  actor: string;
+  actions: OpenSocialNetworkAction[];
+}

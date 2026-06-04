@@ -34,6 +34,7 @@ my-page/
 │   ├── assets/
 │   ├── feed.json
 │   ├── index.html
+│   ├── opensocial/actions/index.json
 │   ├── page.js
 │   ├── profile.json
 │   └── styles.css
@@ -41,7 +42,7 @@ my-page/
     └── identity.private.jwk.json
 ```
 
-The `public/` directory is safe to deploy. The `private/` directory is not.
+The `public/` directory is safe to deploy. It includes the page, feed, profile, and public action log. The `private/` directory is not.
 
 ## Why This Exists
 

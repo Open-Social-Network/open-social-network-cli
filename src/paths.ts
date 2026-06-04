@@ -34,3 +34,7 @@ export function discoveryPath(projectDir: string): string {
 export function feedPath(projectDir: string): string {
   return join(publicDir(projectDir), 'feed.json');
 }
+
+export function actionLogPath(projectDir: string): string {
+  return join(publicDir(projectDir), 'opensocial/actions/index.json');
+}

@@ -1,7 +1,11 @@
 import { fileExists, readJson } from './fs-utils.js';
-import { discoveryPath, feedPath, privateKeyPath, profilePath } from './paths.js';
+import { actionLogPath, discoveryPath, feedPath, privateKeyPath, profilePath } from './paths.js';
 import { verifyPost } from './protocol/signing.js';
-import type { OpenSocialNetworkFeed, OpenSocialNetworkIdentity } from './types.js';
+import type {
+  OpenSocialNetworkActionLog,
+  OpenSocialNetworkFeed,
+  OpenSocialNetworkIdentity,
+} from './types.js';
 
 export interface ValidationResult {
   valid: boolean;
@@ -28,6 +32,9 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
   if (!(await fileExists(feedPath(projectDir)))) {
     failures.push('public/feed.json is missing');
   }
+  if (!(await fileExists(actionLogPath(projectDir)))) {
+    failures.push('public/opensocial/actions/index.json is missing');
+  }
 
   if (failures.some((failure) => failure.endsWith('is missing'))) {
     return { valid: false, verifiedPosts, failures };
@@ -36,6 +43,7 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
   const profile = await readJson<OpenSocialNetworkIdentity>(profilePath(projectDir));
   const discovery = await readJson<OpenSocialNetworkIdentity>(discoveryPath(projectDir));
   const feed = await readJson<OpenSocialNetworkFeed>(feedPath(projectDir));
+  const actionLog = await readJson<OpenSocialNetworkActionLog>(actionLogPath(projectDir));
 
   if (profile.protocol !== 'open-social-network' || profile.version !== '0.1') {
     failures.push('profile.json must declare Open Social Network protocol version 0.1');
@@ -51,6 +59,18 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
 
   if (feed.author !== profile.handle) {
     failures.push('feed author must match profile handle');
+  }
+
+  if (actionLog.protocol !== 'open-social-network' || actionLog.version !== '0.1') {
+    failures.push('action log must declare Open Social Network protocol version 0.1');
+  }
+
+  if (actionLog.actor !== profile.handle) {
+    failures.push('action log actor must match profile handle');
+  }
+
+  if (!Array.isArray(actionLog.actions)) {
+    failures.push('action log actions must be an array');
   }
 
   for (const post of feed.posts || []) {
