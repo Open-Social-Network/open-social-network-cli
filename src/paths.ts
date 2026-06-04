@@ -23,6 +23,10 @@ export function privateKeyPath(projectDir: string): string {
   return join(projectDir, 'private/identity.private.jwk.json');
 }
 
+export function messagePrivateKeyPath(projectDir: string): string {
+  return join(projectDir, 'private/messages.private.jwk.json');
+}
+
 export function profilePath(projectDir: string): string {
   return join(publicDir(projectDir), 'profile.json');
 }
@@ -37,4 +41,8 @@ export function feedPath(projectDir: string): string {
 
 export function actionLogPath(projectDir: string): string {
   return join(publicDir(projectDir), 'opensocial/actions/index.json');
+}
+
+export function messageInboxPath(projectDir: string): string {
+  return join(publicDir(projectDir), 'opensocial/messages/inbox/index.json');
 }

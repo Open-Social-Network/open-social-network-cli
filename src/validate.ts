@@ -1,8 +1,16 @@
 import { fileExists, readJson } from './fs-utils.js';
-import { actionLogPath, discoveryPath, feedPath, privateKeyPath, profilePath } from './paths.js';
+import {
+  actionLogPath,
+  discoveryPath,
+  feedPath,
+  messageInboxPath,
+  privateKeyPath,
+  profilePath,
+} from './paths.js';
 import { verifyPost } from './protocol/signing.js';
 import type {
   OpenSocialNetworkActionLog,
+  OpenSocialNetworkDirectMessageLog,
   OpenSocialNetworkFeed,
   OpenSocialNetworkIdentity,
 } from './types.js';
@@ -35,6 +43,9 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
   if (!(await fileExists(actionLogPath(projectDir)))) {
     failures.push('public/opensocial/actions/index.json is missing');
   }
+  if (!(await fileExists(messageInboxPath(projectDir)))) {
+    failures.push('public/opensocial/messages/inbox/index.json is missing');
+  }
 
   if (failures.some((failure) => failure.endsWith('is missing'))) {
     return { valid: false, verifiedPosts, failures };
@@ -44,6 +55,7 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
   const discovery = await readJson<OpenSocialNetworkIdentity>(discoveryPath(projectDir));
   const feed = await readJson<OpenSocialNetworkFeed>(feedPath(projectDir));
   const actionLog = await readJson<OpenSocialNetworkActionLog>(actionLogPath(projectDir));
+  const messageLog = await readJson<OpenSocialNetworkDirectMessageLog>(messageInboxPath(projectDir));
 
   if (profile.protocol !== 'open-social-network' || profile.version !== '0.1') {
     failures.push('profile.json must declare Open Social Network protocol version 0.1');
@@ -71,6 +83,18 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
 
   if (!Array.isArray(actionLog.actions)) {
     failures.push('action log actions must be an array');
+  }
+
+  if (messageLog.protocol !== 'open-social-network' || messageLog.version !== '0.1') {
+    failures.push('message inbox must declare Open Social Network protocol version 0.1');
+  }
+
+  if (messageLog.owner !== profile.handle) {
+    failures.push('message inbox owner must match profile handle');
+  }
+
+  if (!Array.isArray(messageLog.messages)) {
+    failures.push('message inbox messages must be an array');
   }
 
   for (const post of feed.posts || []) {

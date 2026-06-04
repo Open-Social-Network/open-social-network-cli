@@ -12,6 +12,11 @@ export interface OpenSocialNetworkConfig {
   projectName: string;
 }
 
+export interface OpenSocialNetworkMessagePublicKey {
+  alg: 'ECDH-P256';
+  jwk: JsonWebKey;
+}
+
 export interface OpenSocialNetworkIdentity {
   protocol: 'open-social-network';
   version: '0.1';
@@ -23,9 +28,11 @@ export interface OpenSocialNetworkIdentity {
     alg: 'ES256';
     jwk: JsonWebKey;
   };
+  messagePublicKey?: OpenSocialNetworkMessagePublicKey;
   endpoints: {
     profile: string;
     feed: string;
+    messages?: string;
   };
 }
 
@@ -90,4 +97,11 @@ export interface OpenSocialNetworkActionLog {
   version: '0.1';
   actor: string;
   actions: OpenSocialNetworkAction[];
+}
+
+export interface OpenSocialNetworkDirectMessageLog {
+  protocol: 'open-social-network';
+  version: '0.1';
+  owner: string;
+  messages: unknown[];
 }

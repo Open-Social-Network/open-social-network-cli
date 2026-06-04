@@ -114,7 +114,12 @@ describe('deploy adapters', () => {
     expect(
       JSON.parse(await readFile(join(outputDir, 'opensocial/actions/index.json'), 'utf8')).actions,
     ).toEqual([]);
+    expect(
+      JSON.parse(await readFile(join(outputDir, 'opensocial/messages/inbox/index.json'), 'utf8'))
+        .messages,
+    ).toEqual([]);
     await expect(readFile(join(outputDir, 'private/identity.private.jwk.json'), 'utf8')).rejects.toThrow();
+    await expect(readFile(join(outputDir, 'private/messages.private.jwk.json'), 'utf8')).rejects.toThrow();
   });
 });
 

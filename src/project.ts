@@ -6,6 +6,8 @@ import {
   configPath,
   discoveryPath,
   feedPath,
+  messageInboxPath,
+  messagePrivateKeyPath,
   privateKeyPath,
   profilePath,
   publicDir,
@@ -15,13 +17,16 @@ import {
   exportPrivateKeyJwk,
   exportPublicKeyJwk,
   generateIdentityKeyPair,
+  generateMessageKeyPair,
   publicJwkFromPrivateJwk,
+  publicMessageJwkFromPrivateJwk,
 } from './protocol/keys.js';
 import { signPost } from './protocol/signing.js';
 import type {
   DeployTarget,
   OpenSocialNetworkActionLog,
   OpenSocialNetworkConfig,
+  OpenSocialNetworkDirectMessageLog,
   OpenSocialNetworkFeed,
   OpenSocialNetworkIdentity,
   UnsignedOpenSocialNetworkPost,
@@ -53,8 +58,9 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
   await ensureTextContains(join(projectDir, '.gitignore'), 'private/\nnode_modules/\ndist/\n.DS_Store\n');
 
   const keyResult = await loadOrCreatePrivateKey(projectDir);
+  const messageKeyResult = await loadOrCreateMessagePrivateKey(projectDir);
   const config = buildConfig(options, projectDir);
-  const { profileUrl, feedUrl } = endpointUrls(config.baseUrl);
+  const { profileUrl, feedUrl, messagesUrl } = endpointUrls(config.baseUrl);
   const profile: OpenSocialNetworkIdentity = {
     protocol: 'open-social-network',
     version: '0.1',
@@ -66,13 +72,19 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
       alg: 'ES256',
       jwk: publicJwkFromPrivateJwk(keyResult.privateJwk),
     },
+    messagePublicKey: {
+      alg: 'ECDH-P256',
+      jwk: publicMessageJwkFromPrivateJwk(messageKeyResult.privateJwk),
+    },
     endpoints: {
       profile: profileUrl,
       feed: feedUrl,
+      messages: messagesUrl,
     },
   };
   const existingFeed = await loadExistingFeed(projectDir);
   const existingActionLog = await loadExistingActionLog(projectDir);
+  const existingMessageLog = await loadExistingMessageLog(projectDir);
   const posts = existingFeed?.posts ?? [];
 
   if (!existingFeed && options.firstPost.trim()) {
@@ -93,12 +105,19 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
     actor: profile.handle,
     actions: [],
   };
+  const messageLog: OpenSocialNetworkDirectMessageLog = existingMessageLog ?? {
+    protocol: 'open-social-network',
+    version: '0.1',
+    owner: profile.handle,
+    messages: [],
+  };
 
   await writeJson(configPath(projectDir), config);
   await writeJson(profilePath(projectDir), profile);
   await writeJson(discoveryPath(projectDir), profile);
   await writeJson(feedPath(projectDir), feed);
   await writeJson(actionLogPath(projectDir), actionLog);
+  await writeJson(messageInboxPath(projectDir), messageLog);
 
   return {
     projectDir,
@@ -150,6 +169,24 @@ async function loadOrCreatePrivateKey(
   return { privateJwk: privateWithPublic, created: true };
 }
 
+async function loadOrCreateMessagePrivateKey(
+  projectDir: string,
+): Promise<{ privateJwk: JsonWebKey; created: boolean }> {
+  const path = messagePrivateKeyPath(projectDir);
+  if (await fileExists(path)) {
+    return { privateJwk: await readJson<JsonWebKey>(path), created: false };
+  }
+
+  const keyPair = await generateMessageKeyPair();
+  const privateJwk = await exportPrivateKeyJwk(keyPair.privateKey);
+  const publicJwk = await exportPublicKeyJwk(keyPair.publicKey);
+  const privateWithPublic = { ...privateJwk, x: publicJwk.x, y: publicJwk.y };
+
+  await writeJson(path, privateWithPublic);
+  await chmod(path, 0o600);
+  return { privateJwk: privateWithPublic, created: true };
+}
+
 async function loadExistingFeed(projectDir: string): Promise<OpenSocialNetworkFeed | null> {
   const path = feedPath(projectDir);
   if (!(await fileExists(path))) {
@@ -166,6 +203,16 @@ async function loadExistingActionLog(projectDir: string): Promise<OpenSocialNetw
   return readJson<OpenSocialNetworkActionLog>(path);
 }
 
+async function loadExistingMessageLog(
+  projectDir: string,
+): Promise<OpenSocialNetworkDirectMessageLog | null> {
+  const path = messageInboxPath(projectDir);
+  if (!(await fileExists(path))) {
+    return null;
+  }
+  return readJson<OpenSocialNetworkDirectMessageLog>(path);
+}
+
 function buildConfig(options: CreateProjectOptions, projectDir: string): OpenSocialNetworkConfig {
   return {
     protocol: 'open-social-network',
@@ -180,11 +227,14 @@ function buildConfig(options: CreateProjectOptions, projectDir: string): OpenSoc
   };
 }
 
-function endpointUrls(baseUrl: string): { profileUrl: string; feedUrl: string } {
+function endpointUrls(baseUrl: string): { profileUrl: string; feedUrl: string; messagesUrl: string } {
   const normalized = normalizeBaseUrl(baseUrl);
   return {
     profileUrl: normalized ? `${normalized}/profile.json` : '/profile.json',
     feedUrl: normalized ? `${normalized}/feed.json` : '/feed.json',
+    messagesUrl: normalized
+      ? `${normalized}/opensocial/messages/inbox/index.json`
+      : '/opensocial/messages/inbox/index.json',
   };
 }
 

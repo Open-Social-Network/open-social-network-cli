@@ -5,10 +5,21 @@ const KEY_ALGORITHM: EcKeyGenParams = {
   namedCurve: 'P-256',
 };
 
+const MESSAGE_KEY_ALGORITHM: EcKeyGenParams = {
+  name: 'ECDH',
+  namedCurve: 'P-256',
+};
+
 export async function generateIdentityKeyPair(): Promise<CryptoKeyPair> {
   return (await webcrypto.subtle.generateKey(KEY_ALGORITHM, true, [
     'sign',
     'verify',
+  ])) as unknown as CryptoKeyPair;
+}
+
+export async function generateMessageKeyPair(): Promise<CryptoKeyPair> {
+  return (await webcrypto.subtle.generateKey(MESSAGE_KEY_ALGORITHM, true, [
+    'deriveKey',
   ])) as unknown as CryptoKeyPair;
 }
 
@@ -49,5 +60,16 @@ export function publicJwkFromPrivateJwk(privateJwk: JsonWebKey): JsonWebKey {
     y,
     ext: true,
     key_ops: ['verify'],
+  };
+}
+
+export function publicMessageJwkFromPrivateJwk(privateJwk: JsonWebKey): JsonWebKey {
+  const { d: _d, key_ops: _keyOps, ...publicJwk } = privateJwk;
+
+  return {
+    ...publicJwk,
+    kty: publicJwk.kty ?? 'EC',
+    crv: publicJwk.crv ?? 'P-256',
+    ext: true,
   };
 }

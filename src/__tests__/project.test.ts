@@ -32,7 +32,9 @@ describe('Open Social Network project lifecycle', () => {
     const discovery = await readJson(join(projectDir, 'public/.well-known/open-social-network.json'));
     const feed = await readJson(join(projectDir, 'public/feed.json'));
     const actionLog = await readJson(join(projectDir, 'public/opensocial/actions/index.json'));
+    const messageLog = await readJson(join(projectDir, 'public/opensocial/messages/inbox/index.json'));
     const privateKey = await readJson(join(projectDir, 'private/identity.private.jwk.json'));
+    const messagePrivateKey = await readJson(join(projectDir, 'private/messages.private.jwk.json'));
     const gitignore = await readFile(join(projectDir, '.gitignore'), 'utf8');
     const nojekyll = await readFile(join(projectDir, 'public/.nojekyll'), 'utf8');
     const pageScript = await readFile(join(projectDir, 'public/page.js'), 'utf8');
@@ -44,13 +46,22 @@ describe('Open Social Network project lifecycle', () => {
     expect(feed.author).toBe('ada@example.com');
     expect(feed.posts).toHaveLength(1);
     expect(feed.posts[0].signature.alg).toBe('ES256');
+    expect(profile.messagePublicKey.alg).toBe('ECDH-P256');
+    expect(profile.endpoints.messages).toBe('/opensocial/messages/inbox/index.json');
     expect(actionLog).toEqual({
       protocol: 'open-social-network',
       version: '0.1',
       actor: 'ada@example.com',
       actions: [],
     });
+    expect(messageLog).toEqual({
+      protocol: 'open-social-network',
+      version: '0.1',
+      owner: 'ada@example.com',
+      messages: [],
+    });
     expect(privateKey.d).toBeTypeOf('string');
+    expect(messagePrivateKey.d).toBeTypeOf('string');
     expect(gitignore).toContain('private/');
     expect(nojekyll.trim()).toBe('');
     expect(pageScript).toContain("fetchJson('./feed.json')");
@@ -165,6 +176,31 @@ describe('Open Social Network project lifecycle', () => {
 
     expect(validation.valid).toBe(false);
     expect(validation.failures).toContain('action log actor must match profile handle');
+  });
+
+  it('reports a message inbox owner mismatch as invalid', async () => {
+    const root = await makeTempRoot();
+    const projectDir = join(root, 'my-page');
+
+    await createProject({
+      targetDir: projectDir,
+      handle: 'ada@example.com',
+      name: 'Ada Lovelace',
+      bio: '',
+      website: '',
+      baseUrl: '',
+      deployTarget: 'github',
+      firstPost: 'Original post.',
+    });
+    const messageLogPath = join(projectDir, 'public/opensocial/messages/inbox/index.json');
+    const messageLog = await readJson(messageLogPath);
+    messageLog.owner = 'mallory@example.com';
+    await writeJson(messageLogPath, messageLog);
+
+    const validation = await validateProject(projectDir);
+
+    expect(validation.valid).toBe(false);
+    expect(validation.failures).toContain('message inbox owner must match profile handle');
   });
 
   it('fails cleanly when the private key is missing', async () => {
