@@ -191,7 +191,7 @@ Running `open-social-network` with no command starts the guided setup. The origi
 
 Open Social Network CLI is early alpha. The current priority is simple, safe publishing for real sovereign profiles.
 
-## Relationship To Existing Decentralized Social Platforms
+## How Open Social Network Differs From Existing Decentralized Social Platforms
 
 Open Social Network does not claim that decentralized social media starts here.
 

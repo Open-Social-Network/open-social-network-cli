@@ -28,3 +28,9 @@ Pull requests should include:
 - tests or validation output
 - screenshots for generated page changes
 - notes on compatibility with Open Social Network v0.1
+
+## Project Context
+
+Open Social Network is not trying to erase the work of Mastodon, ActivityPub, Nostr, Bluesky/AT Protocol, Diaspora, Matrix, or the broader fediverse. Those projects have already moved open social infrastructure forward in serious ways.
+
+The CLI exists so normal users can create and publish a sovereign page without becoming infrastructure operators. Contributions should protect the user from accidental private key exposure, keep language simple, and make clear that GitHub Pages and Cloudflare Pages are examples rather than requirements. The public folder should remain portable to any static host.
