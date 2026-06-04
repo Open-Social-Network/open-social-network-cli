@@ -35,8 +35,10 @@ my-page/
 │   ├── feed.json
 │   ├── index.html
 │   ├── opensocial/
-│   │   ├── actions/index.json
-│   │   └── messages/inbox/index.json
+│   │   ├── actions/
+│   │   │   └── index.json
+│   │   └── messages/
+│   │       └── inbox/index.json
 │   ├── page.js
 │   ├── profile.json
 │   └── styles.css
@@ -45,7 +47,7 @@ my-page/
     └── messages.private.jwk.json
 ```
 
-The `public/` directory is safe to deploy. It includes the page, feed, profile, public action log, and encrypted message inbox. The `private/` directory is not.
+The `public/` directory is safe to deploy. It includes the page, feed, profile, public action log, public action inbox path, and encrypted message inbox. The `private/` directory is not.
 
 ## Why This Exists
 

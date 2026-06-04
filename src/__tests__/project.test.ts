@@ -47,6 +47,7 @@ describe('Open Social Network project lifecycle', () => {
     expect(feed.posts).toHaveLength(1);
     expect(feed.posts[0].signature.alg).toBe('ES256');
     expect(profile.messagePublicKey.alg).toBe('ECDH-P256');
+    expect(profile.endpoints.actions).toBe('/opensocial/actions/inbox/index.json');
     expect(profile.endpoints.messages).toBe('/opensocial/messages/inbox/index.json');
     expect(actionLog).toEqual({
       protocol: 'open-social-network',
@@ -201,6 +202,33 @@ describe('Open Social Network project lifecycle', () => {
 
     expect(validation.valid).toBe(false);
     expect(validation.failures).toContain('message inbox owner must match profile handle');
+  });
+
+  it('reports a missing public action inbox endpoint as invalid', async () => {
+    const root = await makeTempRoot();
+    const projectDir = join(root, 'my-page');
+
+    await createProject({
+      targetDir: projectDir,
+      handle: 'ada@example.com',
+      name: 'Ada Lovelace',
+      bio: '',
+      website: '',
+      baseUrl: '',
+      deployTarget: 'github',
+      firstPost: 'Original post.',
+    });
+    const profilePath = join(projectDir, 'public/profile.json');
+    const discoveryPath = join(projectDir, 'public/.well-known/open-social-network.json');
+    const profile = await readJson(profilePath);
+    delete profile.endpoints.actions;
+    await writeJson(profilePath, profile);
+    await writeJson(discoveryPath, profile);
+
+    const validation = await validateProject(projectDir);
+
+    expect(validation.valid).toBe(false);
+    expect(validation.failures).toContain('profile endpoints must include a public action inbox');
   });
 
   it('fails cleanly when the private key is missing', async () => {

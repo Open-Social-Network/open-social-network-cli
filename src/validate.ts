@@ -73,6 +73,10 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
     failures.push('feed author must match profile handle');
   }
 
+  if (typeof profile.endpoints?.actions !== 'string') {
+    failures.push('profile endpoints must include a public action inbox');
+  }
+
   if (actionLog.protocol !== 'open-social-network' || actionLog.version !== '0.1') {
     failures.push('action log must declare Open Social Network protocol version 0.1');
   }

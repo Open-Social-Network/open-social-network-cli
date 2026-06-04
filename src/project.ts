@@ -60,7 +60,7 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
   const keyResult = await loadOrCreatePrivateKey(projectDir);
   const messageKeyResult = await loadOrCreateMessagePrivateKey(projectDir);
   const config = buildConfig(options, projectDir);
-  const { profileUrl, feedUrl, messagesUrl } = endpointUrls(config.baseUrl);
+  const { profileUrl, feedUrl, actionsUrl, messagesUrl } = endpointUrls(config.baseUrl);
   const profile: OpenSocialNetworkIdentity = {
     protocol: 'open-social-network',
     version: '0.1',
@@ -79,6 +79,7 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
     endpoints: {
       profile: profileUrl,
       feed: feedUrl,
+      actions: actionsUrl,
       messages: messagesUrl,
     },
   };
@@ -227,11 +228,19 @@ function buildConfig(options: CreateProjectOptions, projectDir: string): OpenSoc
   };
 }
 
-function endpointUrls(baseUrl: string): { profileUrl: string; feedUrl: string; messagesUrl: string } {
+function endpointUrls(baseUrl: string): {
+  profileUrl: string;
+  feedUrl: string;
+  actionsUrl: string;
+  messagesUrl: string;
+} {
   const normalized = normalizeBaseUrl(baseUrl);
   return {
     profileUrl: normalized ? `${normalized}/profile.json` : '/profile.json',
     feedUrl: normalized ? `${normalized}/feed.json` : '/feed.json',
+    actionsUrl: normalized
+      ? `${normalized}/opensocial/actions/inbox/index.json`
+      : '/opensocial/actions/inbox/index.json',
     messagesUrl: normalized
       ? `${normalized}/opensocial/messages/inbox/index.json`
       : '/opensocial/messages/inbox/index.json',

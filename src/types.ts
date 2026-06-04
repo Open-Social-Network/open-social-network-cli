@@ -32,6 +32,7 @@ export interface OpenSocialNetworkIdentity {
   endpoints: {
     profile: string;
     feed: string;
+    actions?: string;
     messages?: string;
   };
 }
