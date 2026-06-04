@@ -1,5 +1,6 @@
-export function bytesToBase64Url(bytes: ArrayBuffer): string {
-  return Buffer.from(bytes)
+export function bytesToBase64Url(bytes: ArrayBuffer | Uint8Array): string {
+  const buffer = bytes instanceof Uint8Array ? Buffer.from(bytes) : Buffer.from(new Uint8Array(bytes));
+  return buffer
     .toString('base64')
     .replace(/\+/g, '-')
     .replace(/\//g, '_')

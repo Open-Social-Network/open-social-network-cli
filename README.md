@@ -11,9 +11,10 @@ It turns the protocol into a real user flow:
 1. create your page
 2. write posts
 3. like, dislike, and comment with signed portable actions
-4. check that everything verifies
-5. preview locally
-6. publish anywhere static files can be hosted
+4. send encrypted direct messages
+5. check that everything verifies
+6. preview locally
+7. publish anywhere static files can be hosted
 
 ## In One Minute
 
@@ -50,10 +51,12 @@ my-page/
 │   └── styles.css
 └── private/
     ├── identity.private.jwk.json
-    └── messages.private.jwk.json
+    ├── messages.private.jwk.json
+    └── messages/
+        └── outbox/
 ```
 
-The `public/` directory is safe to deploy. It includes the page, feed, profile, the owner's public action log, the page's public action inbox, the portable follow list, and encrypted message inbox. The actor-owned action log at `public/opensocial/actions/index.json` lets compatible aggregators read portable likes, dislikes, and comments from your own page. The follow list at `public/opensocial/follows/index.json` lets compatible aggregators move your social graph with your page. The `private/` directory is not safe to publish.
+The `public/` directory is safe to deploy. It includes the page, feed, profile, the owner's public action log, the page's public action inbox, the portable follow list, and encrypted message inbox. The actor-owned action log at `public/opensocial/actions/index.json` lets compatible aggregators read portable likes, dislikes, and comments from your own page. The follow list at `public/opensocial/follows/index.json` lets compatible aggregators move your social graph with your page. The `private/` directory is not safe to publish. Encrypted message files created by the CLI are saved in `private/messages/outbox/` so they are not accidentally hosted with your public site.
 
 ## Why This Exists
 
@@ -91,6 +94,14 @@ npx open-social-network comment "This should travel with the protocol." --post p
 ```
 
 These commands create signed public actions in your page. Compatible aggregators can read them without owning your account.
+
+Send a private message:
+
+```bash
+npx open-social-network message "Private hello" --to ./their-page
+```
+
+The CLI encrypts the text for the recipient page and saves a message file in `private/messages/outbox/`. Send that file to the recipient by any channel you trust. Only the recipient page's message key can read the text.
 
 Check that the page is valid:
 
@@ -185,6 +196,14 @@ If someone else gets these files, they can publish as that identity or read that
 
 The generated `.gitignore` includes `private/` automatically.
 
+Encrypted direct-message files created from the CLI are written to:
+
+```text
+private/messages/outbox/
+```
+
+They are not part of the public site export.
+
 ## Commands
 
 ```bash
@@ -195,6 +214,7 @@ open-social-network react like --post post_001 --author person@example.com --pro
 open-social-network react dislike --post post_001 --author person@example.com --project ./my-page
 open-social-network react none --post post_001 --author person@example.com --project ./my-page
 open-social-network comment "Great post" --post post_001 --author person@example.com --project ./my-page
+open-social-network message "Private hello" --to ./their-page --project ./my-page
 open-social-network validate --project ./my-page
 open-social-network check --project ./my-page
 open-social-network preview --project ./my-page --port 4173

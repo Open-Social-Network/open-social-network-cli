@@ -157,6 +157,76 @@ describe('runCli', () => {
     expect(output.join('\n')).toContain('Comment signed and saved.');
   });
 
+  it('creates encrypted direct messages with a simple command', async () => {
+    const root = await makeTempRoot();
+    const senderDir = join(root, 'sender-page');
+    const recipientDir = join(root, 'recipient-page');
+    const output: string[] = [];
+
+    await runCli(
+      [
+        'create',
+        senderDir,
+        '--name',
+        'Ada Lovelace',
+        '--handle',
+        'ada@example.com',
+        '--first-post',
+        'Hello from Ada.',
+      ],
+      {},
+    );
+    await runCli(
+      [
+        'create',
+        recipientDir,
+        '--name',
+        'Ben Franklin',
+        '--handle',
+        'ben@example.com',
+        '--first-post',
+        'Hello from Ben.',
+      ],
+      {},
+    );
+
+    expect(
+      await runCli(
+        [
+          'message',
+          'This should stay private.',
+          '--to',
+          recipientDir,
+          '--project',
+          senderDir,
+        ],
+        { stdout: (line) => output.push(line), stderr: (line) => output.push(line) },
+      ),
+    ).toBe(0);
+
+    const savedLine = output.find((line) => line.startsWith('Encrypted message saved to '));
+    expect(savedLine).toBeDefined();
+    const savedPath = savedLine!.replace('Encrypted message saved to ', '').trim();
+    const savedMessage = JSON.parse(await readFile(savedPath, 'utf8'));
+
+    expect(savedPath).toContain(join(senderDir, 'private/messages/outbox'));
+    expect(JSON.stringify(savedMessage)).not.toContain('This should stay private.');
+    expect(savedMessage).toMatchObject({
+      protocol: 'open-social-network',
+      version: '0.1',
+      kind: 'direct-message',
+      sender: 'ada@example.com',
+      recipient: 'ben@example.com',
+      signature: {
+        alg: 'ES256',
+      },
+      encryption: {
+        alg: 'ECDH-P256-A256GCM',
+      },
+    });
+    expect(output.join('\n')).toContain('Send this file to Ben Franklin.');
+  });
+
   it('fails validation after a signed action is tampered with', async () => {
     const root = await makeTempRoot();
     const projectDir = join(root, 'my-page');
@@ -203,6 +273,7 @@ describe('runCli', () => {
     expect(await runCli(['help'], { stdout: (line) => output.push(line) })).toBe(0);
 
     expect(output.join('\n')).toContain('host the public folder anywhere');
+    expect(output.join('\n')).toContain('open-social-network message "Private hello"');
   });
 
   it('returns a nonzero exit code for validation failures', async () => {

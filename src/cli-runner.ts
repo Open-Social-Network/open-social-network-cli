@@ -1,6 +1,12 @@
 import { createInterface } from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
-import { addComment, addPost, addReaction, createProject } from './project.js';
+import {
+  addComment,
+  addPost,
+  addReaction,
+  createDirectMessage,
+  createProject,
+} from './project.js';
 import { validateProject } from './validate.js';
 import { createPreviewServer } from './preview.js';
 import { deployProject } from './deploy.js';
@@ -32,6 +38,9 @@ export async function runCli(args: string[], io: CliIO = {}): Promise<number> {
         return 0;
       case 'comment':
         await runComment(commandArgs, stdout);
+        return 0;
+      case 'message':
+        await runMessage(commandArgs, stdout);
         return 0;
       case 'validate':
         return runValidate(commandArgs, stdout, stderr);
@@ -141,6 +150,30 @@ async function runComment(args: string[], stdout: (line: string) => void): Promi
   stdout('Publish the activity update so compatible aggregators can read it.');
 }
 
+async function runMessage(args: string[], stdout: (line: string) => void): Promise<void> {
+  const parsed = parseArgs(args);
+  const content = parsed.positionals.join(' ').trim();
+  if (!content) {
+    throw new Error('Write your message after the command, for example: open-social-network message "Hi" --to ./their-page');
+  }
+
+  const projectDir = parsed.options.project ?? process.cwd();
+  const recipient = requireOption(
+    parsed.options,
+    'to',
+    'Choose who should receive it with --to ./their-page or --to https://their.page/.',
+  );
+  const summary = await createDirectMessage(projectDir, {
+    content,
+    recipient,
+    outputPath: parsed.options.output,
+  });
+
+  stdout(`Encrypted message saved to ${summary.outputPath}`);
+  stdout(`Send this file to ${summary.recipient.name || summary.recipient.handle}.`);
+  stdout('Only that page can read the message.');
+}
+
 async function runValidate(
   args: string[],
   stdout: (line: string) => void,
@@ -220,6 +253,7 @@ function isCommand(value: string | undefined): value is string {
         'post',
         'react',
         'comment',
+        'message',
         'validate',
         'check',
         'preview',
@@ -293,6 +327,7 @@ Usage:
   open-social-network post "Your post" --project ./my-page
   open-social-network react like --post post_001 --author person@example.com --project ./my-page
   open-social-network comment "Great post" --post post_001 --author person@example.com --project ./my-page
+  open-social-network message "Private hello" --to ./their-page --project ./my-page
   open-social-network check --project ./my-page
   open-social-network preview --project ./my-page --port 4173
   open-social-network publish --project ./my-page --target folder --output ./public-site

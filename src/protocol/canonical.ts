@@ -1,7 +1,9 @@
 import type {
   OpenSocialNetworkAction,
+  OpenSocialNetworkDirectMessage,
   OpenSocialNetworkPost,
   UnsignedOpenSocialNetworkAction,
+  UnsignedOpenSocialNetworkDirectMessage,
   UnsignedOpenSocialNetworkPost,
 } from '../types.js';
 
@@ -28,6 +30,13 @@ export function actionSigningPayload(
   action: OpenSocialNetworkAction | UnsignedOpenSocialNetworkAction,
 ): UnsignedOpenSocialNetworkAction {
   const { signature: _signature, ...payload } = action as OpenSocialNetworkAction;
+  return payload;
+}
+
+export function directMessageSigningPayload(
+  message: OpenSocialNetworkDirectMessage | UnsignedOpenSocialNetworkDirectMessage,
+): UnsignedOpenSocialNetworkDirectMessage {
+  const { signature: _signature, ...payload } = message as OpenSocialNetworkDirectMessage;
   return payload;
 }
 

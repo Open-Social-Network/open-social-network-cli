@@ -51,6 +51,30 @@ export async function importPublicKeyJwk(jwk: JsonWebKey): Promise<CryptoKey> {
   )) as unknown as CryptoKey;
 }
 
+export async function exportMessagePublicKeyJwk(publicKey: CryptoKey): Promise<JsonWebKey> {
+  return webcrypto.subtle.exportKey('jwk', publicKey as unknown as webcrypto.CryptoKey);
+}
+
+export async function importMessagePublicKeyJwk(jwk: JsonWebKey): Promise<CryptoKey> {
+  return (await webcrypto.subtle.importKey(
+    'jwk',
+    jwk,
+    MESSAGE_KEY_ALGORITHM,
+    true,
+    [],
+  )) as unknown as CryptoKey;
+}
+
+export async function importMessagePrivateKeyJwk(jwk: JsonWebKey): Promise<CryptoKey> {
+  return (await webcrypto.subtle.importKey(
+    'jwk',
+    jwk,
+    MESSAGE_KEY_ALGORITHM,
+    true,
+    ['deriveKey'],
+  )) as unknown as CryptoKey;
+}
+
 export function publicJwkFromPrivateJwk(privateJwk: JsonWebKey): JsonWebKey {
   const { kty, crv, x, y } = privateJwk;
   return {

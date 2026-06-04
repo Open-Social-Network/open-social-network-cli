@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
-import { chmod, mkdir, readFile } from 'node:fs/promises';
-import { basename, join, resolve } from 'node:path';
+import { chmod, mkdir, readFile, stat } from 'node:fs/promises';
+import { basename, dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { copyDirectory, ensureTextContains, fileExists, readJson, writeJson } from './fs-utils.js';
 import {
   actionInboxPath,
@@ -21,10 +22,13 @@ import {
   exportPublicKeyJwk,
   generateIdentityKeyPair,
   generateMessageKeyPair,
+  importMessagePublicKeyJwk,
+  importPrivateKeyJwk,
   publicJwkFromPrivateJwk,
   publicMessageJwkFromPrivateJwk,
 } from './protocol/keys.js';
 import { createFollowList } from './protocol/follows.js';
+import { encryptDirectMessage } from './protocol/direct-messages.js';
 import { signAction, signPost } from './protocol/signing.js';
 import type {
   DeployTarget,
@@ -32,6 +36,7 @@ import type {
   OpenSocialNetworkActionLog,
   OpenSocialNetworkActionTarget,
   OpenSocialNetworkConfig,
+  OpenSocialNetworkDirectMessage,
   OpenSocialNetworkDirectMessageLog,
   OpenSocialNetworkFeed,
   OpenSocialNetworkFollowList,
@@ -177,6 +182,18 @@ export interface AddCommentOptions {
   url?: string;
 }
 
+export interface CreateDirectMessageOptions {
+  content: string;
+  recipient: string;
+  outputPath?: string;
+}
+
+export interface CreatedDirectMessageSummary {
+  message: OpenSocialNetworkDirectMessage;
+  outputPath: string;
+  recipient: OpenSocialNetworkIdentity;
+}
+
 export async function addReaction(
   projectDirInput: string,
   options: AddReactionOptions,
@@ -197,6 +214,47 @@ export async function addComment(
     target: actionTargetFromOptions(options),
     content: options.content,
   });
+}
+
+export async function createDirectMessage(
+  projectDirInput: string,
+  options: CreateDirectMessageOptions,
+): Promise<CreatedDirectMessageSummary> {
+  const content = options.content.trim();
+  if (!content) {
+    throw new Error('Message content is required');
+  }
+
+  const projectDir = resolve(projectDirInput);
+  const privateJwk = await requirePrivateKey(projectDir);
+  const profile = await readJson<OpenSocialNetworkIdentity>(profilePath(projectDir));
+  const recipient = await readRecipientProfile(options.recipient);
+
+  if (recipient.handle === profile.handle) {
+    throw new Error('Choose another page to message.');
+  }
+
+  if (recipient.messagePublicKey?.alg !== 'ECDH-P256' || !recipient.messagePublicKey.jwk) {
+    throw new Error(`${recipient.name || recipient.handle} has not turned on messages yet.`);
+  }
+
+  const createdAt = new Date().toISOString();
+  const message = await encryptDirectMessage(
+    {
+      id: createMessageId(createdAt),
+      sender: profile.handle,
+      recipient: recipient.handle,
+      createdAt,
+      content,
+    },
+    await importPrivateKeyJwk(privateJwk),
+    await importMessagePublicKeyJwk(recipient.messagePublicKey.jwk),
+  );
+  const outputPath = resolve(
+    options.outputPath ?? join(projectDir, 'private/messages/outbox', `${message.id}.json`),
+  );
+  await writeJson(outputPath, message);
+  return { message, outputPath, recipient };
 }
 
 export async function requirePrivateKey(projectDir: string): Promise<JsonWebKey> {
@@ -399,6 +457,67 @@ function actionTargetFromOptions(options: {
 
 function createActionId(kind: 'reaction' | 'comment', createdAt: string): string {
   return `${kind}_${Date.parse(createdAt).toString(36)}_${randomUUID()}`;
+}
+
+function createMessageId(createdAt: string): string {
+  return `message_${Date.parse(createdAt).toString(36)}_${randomUUID()}`;
+}
+
+async function readRecipientProfile(input: string): Promise<OpenSocialNetworkIdentity> {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    throw new Error('Choose who should receive the message with --to.');
+  }
+
+  if (/^https?:\/\//iu.test(trimmed)) {
+    return readRemoteRecipientProfile(trimmed);
+  }
+
+  const path = trimmed.startsWith('file://') ? fileURLToPath(trimmed) : trimmed;
+  const resolved = resolve(path);
+  const candidates = [
+    join(resolved, 'public/profile.json'),
+    join(resolved, 'profile.json'),
+    resolved.endsWith('.html') ? join(dirname(resolved), 'profile.json') : resolved,
+    join(dirname(resolved), 'profile.json'),
+  ];
+
+  for (const candidate of candidates) {
+    if (await isFile(candidate)) {
+      return readJson<OpenSocialNetworkIdentity>(candidate);
+    }
+  }
+
+  throw new Error('Could not find the recipient profile. Use --to with a page folder, public folder, profile.json file, or profile URL.');
+}
+
+async function isFile(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isFile();
+  } catch {
+    return false;
+  }
+}
+
+async function readRemoteRecipientProfile(input: string): Promise<OpenSocialNetworkIdentity> {
+  const response = await fetch(remoteProfileUrl(input));
+  if (!response.ok) {
+    throw new Error(`Could not open recipient profile (${response.status}).`);
+  }
+  return (await response.json()) as OpenSocialNetworkIdentity;
+}
+
+function remoteProfileUrl(input: string): string {
+  const url = new URL(input);
+  if (url.pathname.endsWith('/profile.json')) {
+    return url.toString();
+  }
+  if (url.pathname.endsWith('/index.html')) {
+    url.pathname = `${url.pathname.slice(0, -'index.html'.length)}profile.json`;
+    return url.toString();
+  }
+  url.pathname = `${url.pathname.replace(/\/$/u, '')}/profile.json`;
+  return url.toString();
 }
 
 export async function readProjectName(projectDir: string): Promise<string> {
