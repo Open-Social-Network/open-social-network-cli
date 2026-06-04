@@ -32,12 +32,16 @@ describe('Open Social Network project lifecycle', () => {
     const discovery = await readJson(join(projectDir, 'public/.well-known/open-social-network.json'));
     const feed = await readJson(join(projectDir, 'public/feed.json'));
     const actionLog = await readJson(join(projectDir, 'public/opensocial/actions/index.json'));
+    const actionInbox = await readJson(
+      join(projectDir, 'public/opensocial/actions/inbox/index.json'),
+    );
     const messageLog = await readJson(join(projectDir, 'public/opensocial/messages/inbox/index.json'));
     const privateKey = await readJson(join(projectDir, 'private/identity.private.jwk.json'));
     const messagePrivateKey = await readJson(join(projectDir, 'private/messages.private.jwk.json'));
     const gitignore = await readFile(join(projectDir, '.gitignore'), 'utf8');
     const nojekyll = await readFile(join(projectDir, 'public/.nojekyll'), 'utf8');
     const pageScript = await readFile(join(projectDir, 'public/page.js'), 'utf8');
+    const pageSocialScript = await readFile(join(projectDir, 'public/page-social.js'), 'utf8');
     const indexHtml = await readFile(join(projectDir, 'public/index.html'), 'utf8');
 
     expect(profile).toEqual(discovery);
@@ -55,6 +59,12 @@ describe('Open Social Network project lifecycle', () => {
       actor: 'ada@example.com',
       actions: [],
     });
+    expect(actionInbox).toEqual({
+      protocol: 'open-social-network',
+      version: '0.1',
+      owner: 'ada@example.com',
+      actions: [],
+    });
     expect(messageLog).toEqual({
       protocol: 'open-social-network',
       version: '0.1',
@@ -65,7 +75,13 @@ describe('Open Social Network project lifecycle', () => {
     expect(messagePrivateKey.d).toBeTypeOf('string');
     expect(gitignore).toContain('private/');
     expect(nojekyll.trim()).toBe('');
+    expect(pageScript).toContain(
+      "import { renderPostSocialSummary, summarizePostActions } from './page-social.js';",
+    );
     expect(pageScript).toContain("fetchJson('./feed.json')");
+    expect(pageScript).toContain("fetchOptionalJson('./opensocial/actions/inbox/index.json'");
+    expect(pageSocialScript).toContain('export function summarizePostActions');
+    expect(pageSocialScript).toContain('escapeHtml(comment.content)');
     expect(indexHtml).toContain('rel="icon"');
   });
 
@@ -202,6 +218,56 @@ describe('Open Social Network project lifecycle', () => {
 
     expect(validation.valid).toBe(false);
     expect(validation.failures).toContain('message inbox owner must match profile handle');
+  });
+
+  it('reports a public action inbox owner mismatch as invalid', async () => {
+    const root = await makeTempRoot();
+    const projectDir = join(root, 'my-page');
+
+    await createProject({
+      targetDir: projectDir,
+      handle: 'ada@example.com',
+      name: 'Ada Lovelace',
+      bio: '',
+      website: '',
+      baseUrl: '',
+      deployTarget: 'github',
+      firstPost: 'Original post.',
+    });
+    const actionInboxPath = join(projectDir, 'public/opensocial/actions/inbox/index.json');
+    const actionInbox = await readJson(actionInboxPath);
+    actionInbox.owner = 'mallory@example.com';
+    await writeJson(actionInboxPath, actionInbox);
+
+    const validation = await validateProject(projectDir);
+
+    expect(validation.valid).toBe(false);
+    expect(validation.failures).toContain('action inbox owner must match profile handle');
+  });
+
+  it('reports malformed public action inbox actions as invalid', async () => {
+    const root = await makeTempRoot();
+    const projectDir = join(root, 'my-page');
+
+    await createProject({
+      targetDir: projectDir,
+      handle: 'ada@example.com',
+      name: 'Ada Lovelace',
+      bio: '',
+      website: '',
+      baseUrl: '',
+      deployTarget: 'github',
+      firstPost: 'Original post.',
+    });
+    const actionInboxPath = join(projectDir, 'public/opensocial/actions/inbox/index.json');
+    const actionInbox = await readJson(actionInboxPath);
+    actionInbox.actions = { malformed: true };
+    await writeJson(actionInboxPath, actionInbox);
+
+    const validation = await validateProject(projectDir);
+
+    expect(validation.valid).toBe(false);
+    expect(validation.failures).toContain('action inbox actions must be an array');
   });
 
   it('reports a missing public action inbox endpoint as invalid', async () => {

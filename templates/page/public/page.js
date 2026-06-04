@@ -1,3 +1,5 @@
+import { renderPostSocialSummary, summarizePostActions } from './page-social.js';
+
 const profileName = document.querySelector('[data-profile-name]');
 const profileBio = document.querySelector('[data-profile-bio]');
 const postsRoot = document.querySelector('[data-posts]');
@@ -9,6 +11,12 @@ async function boot() {
   try {
     const profile = await fetchJson('./profile.json');
     const feed = await fetchJson('./feed.json');
+    const actionInbox = await fetchOptionalJson('./opensocial/actions/inbox/index.json', {
+      protocol: 'open-social-network',
+      version: '0.1',
+      owner: profile.handle,
+      actions: [],
+    });
     const verifiedPosts = [];
 
     profileName.textContent = profile.name;
@@ -23,10 +31,18 @@ async function boot() {
     verifiedPosts.sort((left, right) => new Date(right.createdAt) - new Date(left.createdAt));
     verificationStatus.textContent =
       verifiedPosts.length === 1 ? '1 verified post' : `${verifiedPosts.length} verified posts`;
-    postsRoot.innerHTML = renderPosts(verifiedPosts);
+    postsRoot.innerHTML = renderPosts(verifiedPosts, actionInbox);
   } catch (error) {
     verificationStatus.textContent = 'Unavailable';
     postsRoot.innerHTML = `<p class="empty-state">${escapeHtml(error.message || 'Could not load feed')}</p>`;
+  }
+}
+
+async function fetchOptionalJson(url, fallback) {
+  try {
+    return await fetchJson(url);
+  } catch {
+    return fallback;
   }
 }
 
@@ -118,7 +134,7 @@ function base64UrlToBytes(value) {
   return bytes.buffer;
 }
 
-function renderPosts(posts) {
+function renderPosts(posts, actionInbox) {
   if (posts.length === 0) {
     return '<p class="empty-state">No verified posts yet.</p>';
   }
@@ -129,6 +145,7 @@ function renderPosts(posts) {
         <article class="post-card">
           <h3>${escapeHtml(formatDate(post.createdAt))}</h3>
           <p>${escapeHtml(post.content)}</p>
+          ${renderPostSocialSummary(summarizePostActions(post, actionInbox))}
           <details class="technical-details post-details">
             <summary>Signature</summary>
             <code>${escapeHtml(post.signature.value.slice(0, 22))}...</code>

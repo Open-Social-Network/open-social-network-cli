@@ -1,5 +1,6 @@
 import { fileExists, readJson } from './fs-utils.js';
 import {
+  actionInboxPath,
   actionLogPath,
   discoveryPath,
   feedPath,
@@ -9,6 +10,7 @@ import {
 } from './paths.js';
 import { verifyPost } from './protocol/signing.js';
 import type {
+  OpenSocialNetworkActionInbox,
   OpenSocialNetworkActionLog,
   OpenSocialNetworkDirectMessageLog,
   OpenSocialNetworkFeed,
@@ -43,6 +45,9 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
   if (!(await fileExists(actionLogPath(projectDir)))) {
     failures.push('public/opensocial/actions/index.json is missing');
   }
+  if (!(await fileExists(actionInboxPath(projectDir)))) {
+    failures.push('public/opensocial/actions/inbox/index.json is missing');
+  }
   if (!(await fileExists(messageInboxPath(projectDir)))) {
     failures.push('public/opensocial/messages/inbox/index.json is missing');
   }
@@ -55,6 +60,7 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
   const discovery = await readJson<OpenSocialNetworkIdentity>(discoveryPath(projectDir));
   const feed = await readJson<OpenSocialNetworkFeed>(feedPath(projectDir));
   const actionLog = await readJson<OpenSocialNetworkActionLog>(actionLogPath(projectDir));
+  const actionInbox = await readJson<OpenSocialNetworkActionInbox>(actionInboxPath(projectDir));
   const messageLog = await readJson<OpenSocialNetworkDirectMessageLog>(messageInboxPath(projectDir));
 
   if (profile.protocol !== 'open-social-network' || profile.version !== '0.1') {
@@ -87,6 +93,26 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
 
   if (!Array.isArray(actionLog.actions)) {
     failures.push('action log actions must be an array');
+  }
+
+  if (actionInbox.protocol !== 'open-social-network' || actionInbox.version !== '0.1') {
+    failures.push('action inbox must declare Open Social Network protocol version 0.1');
+  }
+
+  if (actionInbox.owner !== profile.handle) {
+    failures.push('action inbox owner must match profile handle');
+  }
+
+  if (!Array.isArray(actionInbox.actions)) {
+    failures.push('action inbox actions must be an array');
+  }
+
+  if (Array.isArray(actionInbox.actions)) {
+    for (const action of actionInbox.actions) {
+      if (action?.target?.author !== profile.handle) {
+        failures.push(`action ${action?.id || '(missing id)'} must target this page owner`);
+      }
+    }
   }
 
   if (messageLog.protocol !== 'open-social-network' || messageLog.version !== '0.1') {

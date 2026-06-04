@@ -100,6 +100,13 @@ export interface OpenSocialNetworkActionLog {
   actions: OpenSocialNetworkAction[];
 }
 
+export interface OpenSocialNetworkActionInbox {
+  protocol: 'open-social-network';
+  version: '0.1';
+  owner: string;
+  actions: OpenSocialNetworkAction[];
+}
+
 export interface OpenSocialNetworkDirectMessageLog {
   protocol: 'open-social-network';
   version: '0.1';

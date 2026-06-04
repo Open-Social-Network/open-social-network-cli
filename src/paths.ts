@@ -43,6 +43,10 @@ export function actionLogPath(projectDir: string): string {
   return join(publicDir(projectDir), 'opensocial/actions/index.json');
 }
 
+export function actionInboxPath(projectDir: string): string {
+  return join(publicDir(projectDir), 'opensocial/actions/inbox/index.json');
+}
+
 export function messageInboxPath(projectDir: string): string {
   return join(publicDir(projectDir), 'opensocial/messages/inbox/index.json');
 }

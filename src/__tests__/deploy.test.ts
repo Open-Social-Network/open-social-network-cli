@@ -115,6 +115,10 @@ describe('deploy adapters', () => {
       JSON.parse(await readFile(join(outputDir, 'opensocial/actions/index.json'), 'utf8')).actions,
     ).toEqual([]);
     expect(
+      JSON.parse(await readFile(join(outputDir, 'opensocial/actions/inbox/index.json'), 'utf8'))
+        .actions,
+    ).toEqual([]);
+    expect(
       JSON.parse(await readFile(join(outputDir, 'opensocial/messages/inbox/index.json'), 'utf8'))
         .messages,
     ).toEqual([]);

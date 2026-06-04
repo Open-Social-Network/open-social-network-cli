@@ -2,6 +2,7 @@ import { chmod, mkdir, readFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { copyDirectory, ensureTextContains, fileExists, readJson, writeJson } from './fs-utils.js';
 import {
+  actionInboxPath,
   actionLogPath,
   configPath,
   discoveryPath,
@@ -24,6 +25,7 @@ import {
 import { signPost } from './protocol/signing.js';
 import type {
   DeployTarget,
+  OpenSocialNetworkActionInbox,
   OpenSocialNetworkActionLog,
   OpenSocialNetworkConfig,
   OpenSocialNetworkDirectMessageLog,
@@ -85,6 +87,7 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
   };
   const existingFeed = await loadExistingFeed(projectDir);
   const existingActionLog = await loadExistingActionLog(projectDir);
+  const existingActionInbox = await loadExistingActionInbox(projectDir);
   const existingMessageLog = await loadExistingMessageLog(projectDir);
   const posts = existingFeed?.posts ?? [];
 
@@ -106,6 +109,12 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
     actor: profile.handle,
     actions: [],
   };
+  const actionInbox: OpenSocialNetworkActionInbox = existingActionInbox ?? {
+    protocol: 'open-social-network',
+    version: '0.1',
+    owner: profile.handle,
+    actions: [],
+  };
   const messageLog: OpenSocialNetworkDirectMessageLog = existingMessageLog ?? {
     protocol: 'open-social-network',
     version: '0.1',
@@ -118,6 +127,7 @@ export async function createProject(options: CreateProjectOptions): Promise<Proj
   await writeJson(discoveryPath(projectDir), profile);
   await writeJson(feedPath(projectDir), feed);
   await writeJson(actionLogPath(projectDir), actionLog);
+  await writeJson(actionInboxPath(projectDir), actionInbox);
   await writeJson(messageInboxPath(projectDir), messageLog);
 
   return {
@@ -202,6 +212,16 @@ async function loadExistingActionLog(projectDir: string): Promise<OpenSocialNetw
     return null;
   }
   return readJson<OpenSocialNetworkActionLog>(path);
+}
+
+async function loadExistingActionInbox(
+  projectDir: string,
+): Promise<OpenSocialNetworkActionInbox | null> {
+  const path = actionInboxPath(projectDir);
+  if (!(await fileExists(path))) {
+    return null;
+  }
+  return readJson<OpenSocialNetworkActionInbox>(path);
 }
 
 async function loadExistingMessageLog(
