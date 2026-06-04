@@ -10,9 +10,10 @@ It turns the protocol into a real user flow:
 
 1. create your page
 2. write posts
-3. check that everything verifies
-4. preview locally
-5. publish anywhere static files can be hosted
+3. like, dislike, and comment with signed portable actions
+4. check that everything verifies
+5. preview locally
+6. publish anywhere static files can be hosted
 
 ## In One Minute
 
@@ -76,6 +77,20 @@ Add a post:
 cd my-page
 npx open-social-network post "Hello from my sovereign Open Social Network page."
 ```
+
+Like a post from another page:
+
+```bash
+npx open-social-network react like --post post_001 --author ada@example.com
+```
+
+Comment on a post:
+
+```bash
+npx open-social-network comment "This should travel with the protocol." --post post_001 --author ada@example.com
+```
+
+These commands create signed public actions in your page. Compatible aggregators can read them without owning your account.
 
 Check that the page is valid:
 
@@ -176,6 +191,10 @@ The generated `.gitignore` includes `private/` automatically.
 open-social-network init [folder]
 open-social-network create [folder]
 open-social-network post "Your post" --project ./my-page
+open-social-network react like --post post_001 --author person@example.com --project ./my-page
+open-social-network react dislike --post post_001 --author person@example.com --project ./my-page
+open-social-network react none --post post_001 --author person@example.com --project ./my-page
+open-social-network comment "Great post" --post post_001 --author person@example.com --project ./my-page
 open-social-network validate --project ./my-page
 open-social-network check --project ./my-page
 open-social-network preview --project ./my-page --port 4173

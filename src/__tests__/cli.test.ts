@@ -79,6 +79,124 @@ describe('runCli', () => {
     expect(output.join('\n')).toContain('host the public folder anywhere');
   });
 
+  it('adds signed portable reactions and comments with simple commands', async () => {
+    const root = await makeTempRoot();
+    const projectDir = join(root, 'my-page');
+    const output: string[] = [];
+
+    await runCli(
+      [
+        'create',
+        projectDir,
+        '--name',
+        'Ada Lovelace',
+        '--handle',
+        'ada@example.com',
+        '--first-post',
+        'Hello from the CLI.',
+      ],
+      {},
+    );
+
+    expect(
+      await runCli(
+        ['react', 'like', '--post', 'post_001', '--author', 'ben@example.com', '--project', projectDir],
+        { stdout: (line) => output.push(line), stderr: (line) => output.push(line) },
+      ),
+    ).toBe(0);
+    expect(
+      await runCli(
+        [
+          'comment',
+          'Portable comments should work from the CLI.',
+          '--post',
+          'post_001',
+          '--author',
+          'ben@example.com',
+          '--project',
+          projectDir,
+        ],
+        { stdout: (line) => output.push(line), stderr: (line) => output.push(line) },
+      ),
+    ).toBe(0);
+    expect(await runCli(['check', '--project', projectDir], {})).toBe(0);
+
+    const actionLog = JSON.parse(
+      await readFile(join(projectDir, 'public/opensocial/actions/index.json'), 'utf8'),
+    );
+
+    expect(actionLog.actor).toBe('ada@example.com');
+    expect(actionLog.actions).toHaveLength(2);
+    expect(actionLog.actions[0]).toMatchObject({
+      kind: 'reaction',
+      actor: 'ada@example.com',
+      reaction: 'like',
+      target: {
+        type: 'post',
+        id: 'post_001',
+        author: 'ben@example.com',
+      },
+      signature: {
+        alg: 'ES256',
+      },
+    });
+    expect(actionLog.actions[1]).toMatchObject({
+      kind: 'comment',
+      actor: 'ada@example.com',
+      content: 'Portable comments should work from the CLI.',
+      target: {
+        type: 'post',
+        id: 'post_001',
+        author: 'ben@example.com',
+      },
+      signature: {
+        alg: 'ES256',
+      },
+    });
+    expect(output.join('\n')).toContain('Reaction signed and saved.');
+    expect(output.join('\n')).toContain('Comment signed and saved.');
+  });
+
+  it('fails validation after a signed action is tampered with', async () => {
+    const root = await makeTempRoot();
+    const projectDir = join(root, 'my-page');
+
+    await runCli(
+      [
+        'create',
+        projectDir,
+        '--name',
+        'Ada Lovelace',
+        '--handle',
+        'ada@example.com',
+        '--first-post',
+        'Hello from the CLI.',
+      ],
+      {},
+    );
+    await runCli(
+      [
+        'comment',
+        'Original public comment.',
+        '--post',
+        'post_001',
+        '--author',
+        'ben@example.com',
+        '--project',
+        projectDir,
+      ],
+      {},
+    );
+
+    const actionLogPath = join(projectDir, 'public/opensocial/actions/index.json');
+    const actionLog = JSON.parse(await readFile(actionLogPath, 'utf8'));
+    actionLog.actions[0].content = 'Tampered public comment.';
+    const { writeFile } = await import('node:fs/promises');
+    await writeFile(actionLogPath, `${JSON.stringify(actionLog, null, 2)}\n`, 'utf8');
+
+    expect(await runCli(['check', '--project', projectDir], {})).toBe(1);
+  });
+
   it('explains that any static host can publish a page', async () => {
     const output: string[] = [];
 

@@ -85,21 +85,34 @@ interface OpenSocialNetworkActionBase {
   actor: string;
   createdAt: string;
   target: OpenSocialNetworkActionTarget;
+}
+
+interface OpenSocialNetworkSignedAction {
   signature: {
     alg: 'ES256';
     value: string;
   };
 }
 
-export interface OpenSocialNetworkReactionAction extends OpenSocialNetworkActionBase {
+export interface UnsignedOpenSocialNetworkReactionAction extends OpenSocialNetworkActionBase {
   kind: 'reaction';
   reaction: OpenSocialNetworkReaction;
 }
 
-export interface OpenSocialNetworkCommentAction extends OpenSocialNetworkActionBase {
+export interface UnsignedOpenSocialNetworkCommentAction extends OpenSocialNetworkActionBase {
   kind: 'comment';
   content: string;
 }
+
+export type UnsignedOpenSocialNetworkAction =
+  | UnsignedOpenSocialNetworkReactionAction
+  | UnsignedOpenSocialNetworkCommentAction;
+
+export type OpenSocialNetworkReactionAction =
+  UnsignedOpenSocialNetworkReactionAction & OpenSocialNetworkSignedAction;
+
+export type OpenSocialNetworkCommentAction =
+  UnsignedOpenSocialNetworkCommentAction & OpenSocialNetworkSignedAction;
 
 export type OpenSocialNetworkAction =
   | OpenSocialNetworkReactionAction

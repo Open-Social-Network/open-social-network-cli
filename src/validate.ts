@@ -9,7 +9,7 @@ import {
   privateKeyPath,
   profilePath,
 } from './paths.js';
-import { verifyPost } from './protocol/signing.js';
+import { verifyAction, verifyPost } from './protocol/signing.js';
 import type {
   OpenSocialNetworkActionInbox,
   OpenSocialNetworkActionLog,
@@ -99,6 +99,14 @@ export async function validateProject(projectDir: string): Promise<ValidationRes
 
   if (!Array.isArray(actionLog.actions)) {
     failures.push('action log actions must be an array');
+  } else {
+    for (const action of actionLog.actions) {
+      if (await verifyAction(action, profile)) {
+        continue;
+      }
+
+      failures.push(`action ${action?.id || '(missing id)'} failed signature verification`);
+    }
   }
 
   if (actionInbox.protocol !== 'open-social-network' || actionInbox.version !== '0.1') {

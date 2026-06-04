@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { chmod, mkdir, readFile } from 'node:fs/promises';
 import { basename, join, resolve } from 'node:path';
 import { copyDirectory, ensureTextContains, fileExists, readJson, writeJson } from './fs-utils.js';
@@ -24,16 +25,19 @@ import {
   publicMessageJwkFromPrivateJwk,
 } from './protocol/keys.js';
 import { createFollowList } from './protocol/follows.js';
-import { signPost } from './protocol/signing.js';
+import { signAction, signPost } from './protocol/signing.js';
 import type {
   DeployTarget,
   OpenSocialNetworkActionInbox,
   OpenSocialNetworkActionLog,
+  OpenSocialNetworkActionTarget,
   OpenSocialNetworkConfig,
   OpenSocialNetworkDirectMessageLog,
   OpenSocialNetworkFeed,
   OpenSocialNetworkFollowList,
   OpenSocialNetworkIdentity,
+  OpenSocialNetworkReaction,
+  UnsignedOpenSocialNetworkAction,
   UnsignedOpenSocialNetworkPost,
 } from './types.js';
 
@@ -157,6 +161,42 @@ export async function addPost(projectDirInput: string, content: string): Promise
   feed.posts.push(await signPost(createUnsignedPost(id, profile.handle, content), privateJwk));
   await writeJson(feedPath(projectDir), feed);
   return feed;
+}
+
+export interface AddReactionOptions {
+  reaction: OpenSocialNetworkReaction;
+  postId: string;
+  author: string;
+  url?: string;
+}
+
+export interface AddCommentOptions {
+  content: string;
+  postId: string;
+  author: string;
+  url?: string;
+}
+
+export async function addReaction(
+  projectDirInput: string,
+  options: AddReactionOptions,
+): Promise<OpenSocialNetworkActionLog> {
+  return appendSignedAction(projectDirInput, {
+    kind: 'reaction',
+    target: actionTargetFromOptions(options),
+    reaction: options.reaction,
+  });
+}
+
+export async function addComment(
+  projectDirInput: string,
+  options: AddCommentOptions,
+): Promise<OpenSocialNetworkActionLog> {
+  return appendSignedAction(projectDirInput, {
+    kind: 'comment',
+    target: actionTargetFromOptions(options),
+    content: options.content,
+  });
 }
 
 export async function requirePrivateKey(projectDir: string): Promise<JsonWebKey> {
@@ -293,6 +333,72 @@ function createUnsignedPost(id: string, author: string, content: string): Unsign
     createdAt: new Date().toISOString(),
     content,
   };
+}
+
+type AppendSignedActionInput =
+  | {
+      kind: 'reaction';
+      target: OpenSocialNetworkActionTarget;
+      reaction: OpenSocialNetworkReaction;
+    }
+  | {
+      kind: 'comment';
+      target: OpenSocialNetworkActionTarget;
+      content: string;
+    };
+
+async function appendSignedAction(
+  projectDirInput: string,
+  input: AppendSignedActionInput,
+): Promise<OpenSocialNetworkActionLog> {
+  const projectDir = resolve(projectDirInput);
+  const privateJwk = await requirePrivateKey(projectDir);
+  const profile = await readJson<OpenSocialNetworkIdentity>(profilePath(projectDir));
+  const actionLog = await readJson<OpenSocialNetworkActionLog>(actionLogPath(projectDir));
+  const createdAt = new Date().toISOString();
+  const signedAction = await signAction(
+    {
+      ...input,
+      id: createActionId(input.kind, createdAt),
+      actor: profile.handle,
+      createdAt,
+    } as UnsignedOpenSocialNetworkAction,
+    privateJwk,
+  );
+
+  if (actionLog.actor !== profile.handle) {
+    throw new Error('The public action log does not belong to this page.');
+  }
+
+  if (!Array.isArray(actionLog.actions)) {
+    throw new Error('The public action log is malformed.');
+  }
+
+  actionLog.actions.push(signedAction);
+  await writeJson(actionLogPath(projectDir), actionLog);
+  return actionLog;
+}
+
+function actionTargetFromOptions(options: {
+  postId: string;
+  author: string;
+  url?: string;
+}): OpenSocialNetworkActionTarget {
+  const target: OpenSocialNetworkActionTarget = {
+    type: 'post',
+    id: options.postId,
+    author: options.author,
+  };
+
+  if (options.url?.trim()) {
+    target.url = options.url.trim();
+  }
+
+  return target;
+}
+
+function createActionId(kind: 'reaction' | 'comment', createdAt: string): string {
+  return `${kind}_${Date.parse(createdAt).toString(36)}_${randomUUID()}`;
 }
 
 export async function readProjectName(projectDir: string): Promise<string> {

@@ -1,10 +1,10 @@
 import { createInterface } from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
-import { addPost, createProject } from './project.js';
+import { addComment, addPost, addReaction, createProject } from './project.js';
 import { validateProject } from './validate.js';
 import { createPreviewServer } from './preview.js';
 import { deployProject } from './deploy.js';
-import type { DeployTarget } from './types.js';
+import type { DeployTarget, OpenSocialNetworkReaction } from './types.js';
 
 export interface CliIO {
   stdout?: (line: string) => void;
@@ -26,6 +26,12 @@ export async function runCli(args: string[], io: CliIO = {}): Promise<number> {
         return 0;
       case 'post':
         await runPost(commandArgs, stdout);
+        return 0;
+      case 'react':
+        await runReact(commandArgs, stdout);
+        return 0;
+      case 'comment':
+        await runComment(commandArgs, stdout);
         return 0;
       case 'validate':
         return runValidate(commandArgs, stdout, stderr);
@@ -93,6 +99,46 @@ async function runPost(args: string[], stdout: (line: string) => void): Promise<
   const projectDir = parsed.options.project ?? process.cwd();
   const feed = await addPost(projectDir, content);
   stdout(`Post signed and added. Feed now contains ${feed.posts.length} posts.`);
+}
+
+async function runReact(args: string[], stdout: (line: string) => void): Promise<void> {
+  const parsed = parseArgs(args);
+  const reaction = normalizeReaction(parsed.positionals[0]);
+  const projectDir = parsed.options.project ?? process.cwd();
+  const postId = requireOption(parsed.options, 'post', 'Choose the post id with --post post_001.');
+  const author = requireOption(parsed.options, 'author', 'Choose the post author with --author person@example.com.');
+
+  await addReaction(projectDir, {
+    reaction,
+    postId,
+    author,
+    url: parsed.options.url,
+  });
+
+  stdout('Reaction signed and saved.');
+  stdout('Publish the activity update so compatible aggregators can read it.');
+}
+
+async function runComment(args: string[], stdout: (line: string) => void): Promise<void> {
+  const parsed = parseArgs(args);
+  const content = parsed.positionals.join(' ').trim();
+  if (!content) {
+    throw new Error('Write your comment after the command, for example: open-social-network comment "Great post"');
+  }
+
+  const projectDir = parsed.options.project ?? process.cwd();
+  const postId = requireOption(parsed.options, 'post', 'Choose the post id with --post post_001.');
+  const author = requireOption(parsed.options, 'author', 'Choose the post author with --author person@example.com.');
+
+  await addComment(projectDir, {
+    content,
+    postId,
+    author,
+    url: parsed.options.url,
+  });
+
+  stdout('Comment signed and saved.');
+  stdout('Publish the activity update so compatible aggregators can read it.');
 }
 
 async function runValidate(
@@ -172,6 +218,8 @@ function isCommand(value: string | undefined): value is string {
         'init',
         'create',
         'post',
+        'react',
+        'comment',
         'validate',
         'check',
         'preview',
@@ -182,6 +230,22 @@ function isCommand(value: string | undefined): value is string {
         '-h',
       ].includes(value),
   );
+}
+
+function normalizeReaction(value: string | undefined): OpenSocialNetworkReaction {
+  if (value === 'like' || value === 'dislike' || value === 'none') {
+    return value;
+  }
+
+  throw new Error('Choose a reaction: like, dislike, or none.');
+}
+
+function requireOption(options: Record<string, string>, key: string, message: string): string {
+  const value = options[key]?.trim();
+  if (!value) {
+    throw new Error(message);
+  }
+  return value;
 }
 
 function normalizeTarget(value: string): DeployTarget {
@@ -227,6 +291,8 @@ function helpText(): string {
 Usage:
   open-social-network create [folder]
   open-social-network post "Your post" --project ./my-page
+  open-social-network react like --post post_001 --author person@example.com --project ./my-page
+  open-social-network comment "Great post" --post post_001 --author person@example.com --project ./my-page
   open-social-network check --project ./my-page
   open-social-network preview --project ./my-page --port 4173
   open-social-network publish --project ./my-page --target folder --output ./public-site
