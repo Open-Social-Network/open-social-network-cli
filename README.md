@@ -49,7 +49,7 @@ my-page/
     └── messages.private.jwk.json
 ```
 
-The `public/` directory is safe to deploy. It includes the page, feed, profile, the owner's public action log, the page's public action inbox, and encrypted message inbox. The `private/` directory is not.
+The `public/` directory is safe to deploy. It includes the page, feed, profile, the owner's public action log, the page's public action inbox, and encrypted message inbox. The actor-owned action log at `public/opensocial/actions/index.json` lets compatible aggregators read portable likes, dislikes, and comments from your own page. The `private/` directory is not safe to publish.
 
 ## Why This Exists
 
